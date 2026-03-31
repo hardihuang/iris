@@ -287,6 +287,30 @@
             50% { transform: scale(1.2); }
         }
 
+        /* 游戏按钮 */
+        .game-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.3);
+        }
+
+        .game-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.5);
+        }
+
+        .game-btn:active {
+            transform: scale(0.98);
+        }
+
         /* 响应式 */
         @media (max-width: 768px) {
             .hero h1 {
@@ -430,6 +454,19 @@
             </ul>
             <p style="margin-top: 20px; text-align: center; color: var(--text-primary);">
                 ✨ 不用客气，不用正式，想到什么说什么！✨
+            </p>
+        </div>
+
+        <!-- 游戏区域 -->
+        <div class="card fade-in delay-4" style="margin-bottom: 40px; text-align: center;">
+            <span class="card-icon">🎮</span>
+            <h2>🦞 龙虾游戏时间！</h2>
+            <p>学习和训练之余，来放松一下吧～</p>
+            <a href="tank-battle.html" class="game-btn">
+                🎮 双人坦克大战
+            </a>
+            <p style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+                叫上朋友一起玩！WASD + 方向键控制 🦞
             </p>
         </div>
 
