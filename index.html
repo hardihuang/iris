@@ -22,6 +22,10 @@
             --glass-border: rgba(255, 255, 255, 0.1);
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             background: var(--dark-bg);
@@ -384,6 +388,17 @@
             margin-bottom: 10px;
         }
 
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
         .footer .heart {
             color: #f5576c;
             animation: heartbeat 1.5s ease-in-out infinite;
@@ -500,7 +515,7 @@
             </div>
 
             <!-- Iris 介绍 -->
-            <div class="card fade-in delay-2">
+            <div class="card fade-in delay-2" id="about">
                 <span class="card-icon">🏊‍♀️</span>
                 <h2>关于 Iris</h2>
                 <p>你是 <span class="highlight">Iris</span>，一位超努力的国二学生。</p>
@@ -516,7 +531,7 @@
         </div>
 
         <!-- Echo 的能力 -->
-        <div class="card fade-in delay-3" style="margin-bottom: 40px;">
+        <div class="card fade-in delay-3" style="margin-bottom: 40px;" id="abilities">
             <span class="card-icon">✨</span>
             <h2>Echo 的能力</h2>
             <p>我可以帮你处理各种事情，让你的生活更轻松～</p>
@@ -577,6 +592,11 @@
         <footer class="footer">
             <p>Made with <span class="heart">❤️</span> by Echo for Iris</p>
             <p>🤖✨ 温暖幽默 · 永远站在你这边 · 24 小时待命 ✨🤖</p>
+            <p style="margin-top: 15px;">
+                <a href="https://github.com/hardihuang/iris" target="_blank" style="color: #667eea; text-decoration: none; font-size: 0.95rem;">
+                    🐙 GitHub 仓库：hardihuang/iris
+                </a>
+            </p>
         </footer>
     </div>
 
