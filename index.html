@@ -29,6 +29,113 @@
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
+            padding-top: 80px;
+        }
+
+        /* 顶部导航栏 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 15, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-logo:hover {
+            filter: brightness(1.2);
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .navbar-menu li a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .navbar-menu li a:hover {
+            color: var(--text-primary);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .navbar-menu li a.active {
+            color: var(--text-primary);
+            background: var(--primary-gradient);
+        }
+
+        .navbar-menu li a.game-link {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 3px 15px rgba(245, 87, 108, 0.3);
+        }
+
+        .navbar-menu li a.game-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(245, 87, 108, 0.5);
+            color: white;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 3px;
+            background: var(--text-primary);
+            border-radius: 2px;
+            transition: all 0.3s ease;
         }
 
         /* 动态背景 */
@@ -287,30 +394,6 @@
             50% { transform: scale(1.2); }
         }
 
-        /* 游戏按钮 */
-        .game-btn {
-            display: inline-block;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: white;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            border-radius: 15px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-            box-shadow: 0 5px 20px rgba(245, 87, 108, 0.3);
-        }
-
-        .game-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.5);
-        }
-
-        .game-btn:active {
-            transform: scale(0.98);
-        }
-
         /* 响应式 */
         @media (max-width: 768px) {
             .hero h1 {
@@ -320,6 +403,19 @@
             .grid {
                 grid-template-columns: 1fr;
             }
+
+            .navbar-menu {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+        }
 
             .card {
                 padding: 30px;
@@ -349,6 +445,26 @@
     </style>
 </head>
 <body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-logo">
+                🤖 Echo × Iris
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="index.html" class="active">🏠 首页</a></li>
+                <li><a href="#about">📖 关于</a></li>
+                <li><a href="#abilities">✨ 能力</a></li>
+                <li><a href="tank-battle.html" class="game-link">🎮 双人坦克大战</a></li>
+            </ul>
+            <button class="mobile-menu-btn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
     <!-- 动态背景 -->
     <div class="bg-animation"></div>
     
@@ -454,19 +570,6 @@
             </ul>
             <p style="margin-top: 20px; text-align: center; color: var(--text-primary);">
                 ✨ 不用客气，不用正式，想到什么说什么！✨
-            </p>
-        </div>
-
-        <!-- 游戏区域 -->
-        <div class="card fade-in delay-4" style="margin-bottom: 40px; text-align: center;">
-            <span class="card-icon">🎮</span>
-            <h2>🦞 龙虾游戏时间！</h2>
-            <p>学习和训练之余，来放松一下吧～</p>
-            <a href="tank-battle.html" class="game-btn">
-                🎮 双人坦克大战
-            </a>
-            <p style="margin-top: 15px; color: var(--text-secondary); font-size: 0.9rem;">
-                叫上朋友一起玩！WASD + 方向键控制 🦞
             </p>
         </div>
 
