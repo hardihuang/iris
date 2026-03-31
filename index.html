@@ -123,6 +123,65 @@
             color: white;
         }
 
+        /* 游戏下拉菜单 */
+        .game-dropdown {
+            position: relative;
+        }
+
+        .game-dropdown-toggle {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 3px 15px rgba(245, 87, 108, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .game-dropdown-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(245, 87, 108, 0.5);
+        }
+
+        .game-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(15, 15, 26, 0.98);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 10px 0;
+            min-width: 180px;
+            list-style: none;
+            display: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            margin-top: 5px;
+        }
+
+        .game-dropdown:hover .game-dropdown-menu {
+            display: block;
+        }
+
+        .game-dropdown-menu li a {
+            display: block;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            background: none;
+            box-shadow: none;
+        }
+
+        .game-dropdown-menu li a:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: var(--text-primary);
+            transform: none;
+        }
+
         /* 移动端菜单按钮 */
         .mobile-menu-btn {
             display: none;
@@ -470,7 +529,13 @@
                 <li><a href="index.html" class="active">🏠 首页</a></li>
                 <li><a href="#about">📖 关于</a></li>
                 <li><a href="#abilities">✨ 能力</a></li>
-                <li><a href="tank-battle.html" class="game-link">🎮 双人坦克大战</a></li>
+                <li class="game-dropdown">
+                    <span class="game-dropdown-toggle">🎮 游戏中心 ▾</span>
+                    <ul class="game-dropdown-menu">
+                        <li><a href="tank-battle.html">🎮 双人坦克大战</a></li>
+                        <li><a href="games/link-link-game.html">🔗 连连看</a></li>
+                    </ul>
+                </li>
             </ul>
             <button class="mobile-menu-btn">
                 <span></span>
