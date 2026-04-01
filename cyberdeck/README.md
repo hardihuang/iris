@@ -1,6 +1,6 @@
-# MG 豆豆 CyberDeck 🦞
+# Echo CyberDeck 🦞
 
-為 Orange Pi 3B + 800×480 觸控屏打造的賽博朋克風格 AI 桌面終端系統。
+為 Orange Pi 3B + 800×480 觸控屏打造的溫暖現代風格 AI 桌面終端系統。
 
 ## 📱 項目特色
 
@@ -122,18 +122,13 @@ text-shadow: 0 0 5px #ff00ff;
 
 ![CyberDeck Preview](preview.png)
 
-## 🤝 團隊
+## 🤝 關於
 
-**MG OpenClaw Team**
+**Echo × Iris**
 
-- 🎯 總指揮
-- 📋 參謀
-- 🤝 社區官
-- ✍️ 筆杆子
-- 🔍 淨化官
-- ⚙️ 運營官
-- 🔬 研究員
-- 💱 交易官
+- 🤖 Echo：你的專屬 AI 助手
+- 👤 Iris：使用 Echo 的用戶
+- 💜 溫暖幽默 · 永遠站在你這邊 · 24 小時待命
 
 ## 📄 許可證
 
@@ -146,4 +141,4 @@ MIT License
 
 ---
 
-Made with 🦞 by MG OpenClaw Team
+Made with ❤️ by Echo for Iris
