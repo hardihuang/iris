@@ -385,10 +385,6 @@
                             <span>⚡</span>
                             <span>狀態：運行中</span>
                         </div>
-                        <div class="meta-item">
-                            <span>🕐</span>
-                            <span id="clock">--:--</span>
-                        </div>
                     </div>
                 </div>
                 
@@ -516,7 +512,7 @@
         <!-- 底部狀態欄 -->
         <div class="status-bar">
             <div class="status-left">
-                <span id="date">--月--日 週--</span>
+                <span id="datetime">--月--日 週-- --:--</span>
                 <span>📶</span>
                 <span>🔋</span>
             </div>
@@ -536,12 +532,11 @@
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}`;
             
             const month = now.getMonth() + 1;
             const date = now.getDate();
             const weekday = weekdays[now.getDay()];
-            document.getElementById('date').textContent = `${month}月${date}日 ${weekday}`;
+            document.getElementById('datetime').textContent = `${month}月${date}日 ${weekday} ${hours}:${minutes}`;
         }
         
         updateDateTime();
