@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=800, height=480, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MG 豆豆 CyberDeck - AI 桌面終端</title>
+    <title>MG 豆豆 - AI 桌面終端</title>
     <style>
         * {
             margin: 0;
@@ -16,29 +16,10 @@
             width: 800px;
             height: 480px;
             overflow: hidden;
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
-            font-family: 'Courier New', monospace;
-            color: #00ffff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            color: #fff;
             touch-action: manipulation;
-        }
-        
-        /* 扫描线效果 */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 255, 255, 0.03) 0px,
-                transparent 1px,
-                transparent 2px,
-                rgba(0, 255, 255, 0.03) 3px
-            );
-            pointer-events: none;
-            z-index: 1000;
         }
         
         .container {
@@ -46,275 +27,192 @@
             height: 480px;
             display: flex;
             flex-direction: column;
-            padding: 4px;
         }
         
-        /* 顶部标题栏 */
-        .header {
-            height: 28px;
+        /* 導航欄 */
+        .navbar {
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(10, 15, 35, 0.95);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 4px;
-            padding: 0 10px;
-            margin-bottom: 4px;
-            flex-shrink: 0;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .header h1 {
-            font-size: 14px;
-            text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff;
+        .nav-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .header .neon-pink {
-            color: #ff00ff;
-            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
         }
         
-        .status-online {
-            font-size: 11px;
-            color: #00ff00;
-            text-shadow: 0 0 5px #00ff00;
-        }
-        
-        .btn-iris {
-            background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(255, 107, 107, 0.2));
-            border: 1px solid rgba(255, 0, 255, 0.4);
-            border-radius: 4px;
-            color: #ff6b6b;
-            padding: 4px 10px;
-            font-size: 10px;
-            cursor: pointer;
+        .nav-links a {
+            color: #fff;
             text-decoration: none;
-            display: inline-block;
-            margin-left: 8px;
-            text-shadow: 0 0 5px #ff6b6b;
+            font-size: 0.95rem;
+            padding: 6px 12px;
+            border-radius: 6px;
             transition: all 0.2s;
         }
         
-        .btn-iris:active {
-            background: rgba(255, 0, 255, 0.3);
-            transform: scale(0.95);
-            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        .nav-links a:hover,
+        .nav-links a:active {
+            background: rgba(255, 255, 255, 0.2);
         }
         
-        /* 主内容区 */
-        .main-area {
+        /* 主內容區 */
+        .main-content {
             flex: 1;
             display: flex;
-            gap: 4px;
-            min-height: 0;
+            padding: 30px;
+            gap: 30px;
             overflow: hidden;
         }
         
-        /* 左侧主显示区 */
-        .main-panel {
+        /* 左側：AI 介紹 */
+        .ai-section {
             flex: 1;
-            background: rgba(10, 15, 35, 0.95);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             flex-direction: column;
-            padding: 6px;
-            overflow: hidden;
         }
         
-        .panel-title {
-            font-size: 11px;
-            color: #00ffff;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-            padding-bottom: 4px;
-        }
-        
-        /* 时钟面板 */
-        .clock-panel {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.05));
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 8px;
-            padding: 8px 15px;
-            margin-bottom: 6px;
-            text-align: center;
-        }
-        
-        .clock-time {
-            font-size: 28px;
-            font-weight: bold;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
-            letter-spacing: 2px;
-        }
-        
-        .clock-info {
-            font-size: 11px;
-            color: #ff00ff;
-            margin-top: 2px;
-            text-shadow: 0 0 5px #ff00ff;
-        }
-        
-        /* AI 状态区 */
-        .ai-status-section {
-            flex: 1;
+        .ai-header {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 10px;
-            background: rgba(0, 255, 255, 0.03);
-            border-radius: 8px;
-            margin: 6px 0;
+            gap: 15px;
+            margin-bottom: 20px;
         }
         
         .ai-avatar {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             border-radius: 50%;
-            border: 3px solid #ff6b6b;
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.6);
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(255, 0, 255, 0.1));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
-            margin-bottom: 10px;
+            font-size: 35px;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
         }
         
-        .ai-name {
-            font-size: 18px;
-            color: #ff6b6b;
-            text-shadow: 0 0 10px #ff6b6b;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-        
-        .ai-version {
-            font-size: 10px;
-            color: #888;
-            margin-bottom: 8px;
-        }
-        
-        .system-ready {
-            font-size: 14px;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
-            text-align: center;
+        .ai-title h1 {
+            font-size: 1.8rem;
             margin-bottom: 5px;
         }
         
-        .team-name {
-            font-size: 12px;
-            color: #00ff00;
-            text-shadow: 0 0 8px #00ff00;
-            font-weight: bold;
-            text-align: center;
+        .ai-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
         
-        /* 服务器监控 */
-        .server-panel-compact {
-            background: rgba(10, 15, 35, 0.95);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 6px;
-            padding: 6px 10px;
-            text-align: center;
+        .ai-description {
+            flex: 1;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
         }
         
-        .server-title-compact {
-            font-size: 9px;
-            color: #00ffff;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-shadow: 0 0 5px #00ffff;
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
         }
         
-        .server-info-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            font-size: 10px;
-            margin-bottom: 3px;
-        }
-        
-        .server-label {
-            color: #888;
-        }
-        
-        .server-value {
-            color: #00ff00;
-            font-weight: bold;
-            text-shadow: 0 0 5px #00ff00;
-        }
-        
-        /* 右侧导航面板 */
-        .nav-panel {
-            width: 260px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        
-        .panel {
-            background: rgba(10, 15, 35, 0.95);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 4px;
-            padding: 8px;
-        }
-        
-        /* 应用列表 */
-        .apps-container {
-            max-height: 320px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        
-        .apps-container::-webkit-scrollbar {
-            width: 4px;
-        }
-        
-        .apps-container::-webkit-scrollbar-track {
-            background: rgba(0, 255, 255, 0.1);
-            border-radius: 2px;
-        }
-        
-        .apps-container::-webkit-scrollbar-thumb {
-            background: rgba(0, 255, 255, 0.3);
-            border-radius: 2px;
-        }
-        
-        .app-card {
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(255, 0, 255, 0.05));
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 4px;
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
             padding: 10px;
-            margin-bottom: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 8px;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 10px;
-            text-decoration: none;
+            gap: 8px;
         }
         
-        .app-card:active {
-            background: rgba(0, 255, 255, 0.15);
-            border-color: #00ffff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-            transform: translateX(2px);
+        /* 右側：應用卡片 */
+        .apps-section {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .apps-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .apps-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .apps-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .apps-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .apps-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .app-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #fff;
+        }
+        
+        .app-item:hover,
+        .app-item:active {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(3px);
         }
         
         .app-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            background: rgba(0, 255, 255, 0.1);
+            font-size: 20px;
             flex-shrink: 0;
         }
         
@@ -324,332 +222,232 @@
         }
         
         .app-name {
-            font-size: 11px;
             font-weight: bold;
-            color: #00ffff;
-            margin-bottom: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
         }
         
         .app-desc {
-            font-size: 8px;
-            color: #888;
+            font-size: 0.8rem;
+            opacity: 0.8;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         
         .app-arrow {
-            font-size: 12px;
-            color: #00ffff;
-            flex-shrink: 0;
+            font-size: 1rem;
+            opacity: 0.7;
         }
         
-        /* 状态面板 */
-        .status-section {
+        /* 底部狀態欄 */
+        .status-bar {
+            height: 35px;
+            background: rgba(0, 0, 0, 0.2);
             display: flex;
-            justify-content: space-around;
-            text-align: center;
-        }
-        
-        .status-item {
-            flex: 1;
-        }
-        
-        .status-value {
-            font-size: 18px;
-            color: #00ff00;
-            text-shadow: 0 0 10px #00ff00;
-        }
-        
-        .status-label {
-            font-size: 8px;
-            color: #888;
-            margin-top: 2px;
-        }
-        
-        /* 底部滚动条 */
-        .footer {
-            height: 18px;
-            background: rgba(10, 15, 35, 0.95);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            border-radius: 4px;
-            margin-top: 4px;
-            overflow: hidden;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
+            padding: 0 20px;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .scrolling-text {
-            white-space: nowrap;
-            animation: scroll 15s linear infinite;
-            font-size: 9px;
-            padding-left: 100%;
-        }
-        
-        @keyframes scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-        
-        /* 全屏按钮 */
-        .fullscreen-btn {
-            position: fixed;
-            top: 6px;
-            right: 150px;
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.05));
-            border: 1px solid rgba(0, 255, 255, 0.4);
-            border-radius: 4px;
-            color: #00ffff;
-            font-size: 14px;
-            cursor: pointer;
+        .status-left {
             display: flex;
+            gap: 15px;
             align-items: center;
-            justify-content: center;
-            z-index: 1001;
+        }
+        
+        .status-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        /* 觸控優化 */
+        a, button {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .touch-feedback {
             transition: all 0.2s;
         }
         
-        .fullscreen-btn:active {
-            background: rgba(0, 255, 255, 0.2);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+        .touch-feedback:active {
+            opacity: 0.7;
+            transform: scale(0.98);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 全屏按钮 -->
-        <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="全屏">⛶</button>
-        
-        <!-- 顶部标题栏 -->
-        <header class="header">
-            <h1>MG<span class="neon-pink">豆豆</span> CYBERDECK</h1>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <a href="https://hardihuang.github.io/iris/index.html" target="_blank" class="btn-iris" title="Echo × Iris AI 助手">
-                    💜 Echo × Iris
-                </a>
-                <div class="status-online">● SYSTEM ONLINE</div>
+        <!-- 導航欄 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span>🦞</span>
+                <span>MG 豆豆</span>
             </div>
-        </header>
+            <ul class="nav-links">
+                <li><a href="#" class="touch-feedback">🏠 首頁</a></li>
+                <li><a href="#about" class="touch-feedback">📖 關於</a></li>
+                <li><a href="#abilities" class="touch-feedback">✨ 能力</a></li>
+                <li><a href="games/index.html" class="touch-feedback">🎮 遊戲</a></li>
+            </ul>
+        </nav>
         
-        <!-- 主内容区 -->
-        <div class="main-area">
-            <!-- 左侧主显示区 -->
-            <div class="main-panel">
-                <!-- 时钟面板 -->
-                <div class="clock-panel">
-                    <div class="clock-time" id="clockTime">00:00:00</div>
-                    <div class="clock-info" id="clockInfo">2026 年 1 月 1 日 星期一</div>
-                </div>
-                
-                <!-- AI 状态区 -->
-                <div class="ai-status-section">
+        <!-- 主內容區 -->
+        <div class="main-content">
+            <!-- 左側：AI 介紹 -->
+            <div class="ai-section">
+                <div class="ai-header">
                     <div class="ai-avatar">🦞</div>
-                    <div class="ai-name">MG 豆豆</div>
-                    <div class="ai-version">AI Assistant V2.0</div>
-                    <div class="system-ready">SYSTEM READY</div>
-                    <div class="team-name">MG OpenClaw Team</div>
+                    <div class="ai-title">
+                        <h1>MG 豆豆</h1>
+                        <div class="ai-subtitle">你的專屬 AI 助手 · OpenClaw 團隊出品</div>
+                    </div>
                 </div>
                 
-                <!-- 服务器监控 -->
-                <div class="server-panel-compact">
-                    <div class="server-title-compact">SERVER STATUS</div>
-                    <div class="server-info-row">
-                        <span><span class="server-label">IP:</span> <span class="server-value">39.108.85.41</span></span>
-                        <span><span class="server-label">狀態:</span> <span class="server-value">● 運行中</span></span>
-                        <span><span class="server-label">地域:</span> <span class="server-value">深圳</span></span>
-                    </div>
-                    <div class="server-info-row">
-                        <span><span class="server-label">CPU:</span> <span class="server-value">2 核</span></span>
-                        <span><span class="server-label">內存:</span> <span class="server-value">2GB</span></span>
-                        <span><span class="server-label">帶寬:</span> <span class="server-value">200Mbps</span></span>
+                <div class="ai-description">
+                    <p>我是 MG 豆豆，你的專屬 AI 助手。</p>
+                    <p style="margin-top: 10px;">
+                        我溫暖又可靠，不是冷冰冰的 AI，而是站在你這邊的夥伴。
+                        我會幫你處理各種任務，讓你的生活和工作更輕鬆～
+                    </p>
+                    
+                    <div class="ai-features">
+                        <div class="feature-item">
+                            <span>✨</span>
+                            <span>24 小時待命，隨時都在</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>🎯</span>
+                            <span>高效執行各種任務</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>💬</span>
+                            <span>陪你聊天解悶</span>
+                        </div>
+                        <div class="feature-item">
+                            <span>🔧</span>
+                            <span>幫助你管理系統</span>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- 右侧导航面板 -->
-            <div class="nav-panel">
-                <!-- 应用列表 -->
-                <div class="panel">
-                    <div class="panel-title">APPLICATIONS</div>
-                    <div class="apps-container">
-                        <a href="https://hardihuang.github.io/iris/index.html" target="_blank" class="app-card">
-                            <div class="app-icon">💜</div>
-                            <div class="app-info">
-                                <div class="app-name">Echo × Iris</div>
-                                <div class="app-desc">AI 助手介紹</div>
-                            </div>
-                            <div class="app-arrow">↗</div>
-                        </a>
-                        
-                        <a href="terminal.html" class="app-card">
-                            <div class="app-icon">💬</div>
-                            <div class="app-info">
-                                <div class="app-name">AI Terminal</div>
-                                <div class="app-desc">AI 對話終端</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="games/index.html" class="app-card">
-                            <div class="app-icon">🎮</div>
-                            <div class="app-info">
-                                <div class="app-name">遊戲中心</div>
-                                <div class="app-desc">坦克大戰/連連看</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="system.html" class="app-card">
-                            <div class="app-icon">⚙️</div>
-                            <div class="app-info">
-                                <div class="app-name">系統信息</div>
-                                <div class="app-desc">監控 CPU/內存/存儲</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="#" class="app-card" onclick="alert('待開發：日曆功能')">
-                            <div class="app-icon">📅</div>
-                            <div class="app-info">
-                                <div class="app-name">日曆</div>
-                                <div class="app-desc">日程管理</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="#" class="app-card" onclick="alert('待開發：天氣功能')">
-                            <div class="app-icon">🌤️</div>
-                            <div class="app-info">
-                                <div class="app-name">天氣</div>
-                                <div class="app-desc">天氣預報</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="#" class="app-card" onclick="alert('待開發：音樂播放器')">
-                            <div class="app-icon">🎵</div>
-                            <div class="app-info">
-                                <div class="app-name">音樂</div>
-                                <div class="app-desc">媒體播放</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="#" class="app-card" onclick="alert('待開發：文件管理器')">
-                            <div class="app-icon">📁</div>
-                            <div class="app-info">
-                                <div class="app-name">文件</div>
-                                <div class="app-desc">文件管理</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                        
-                        <a href="#" class="app-card" onclick="alert('待開發：設置功能')">
-                            <div class="app-icon">🔧</div>
-                            <div class="app-info">
-                                <div class="app-name">設置</div>
-                                <div class="app-desc">系統設置</div>
-                            </div>
-                            <div class="app-arrow">▶</div>
-                        </a>
-                    </div>
+            <!-- 右側：應用列表 -->
+            <div class="apps-section">
+                <div class="apps-title">
+                    <span>🚀</span>
+                    <span>快速訪問</span>
                 </div>
                 
-                <!-- 系统状态 -->
-                <div class="panel">
-                    <div class="panel-title">SYSTEM STATUS</div>
-                    <div class="status-section">
-                        <div class="status-item">
-                            <div class="status-value" id="sysClock">--:--</div>
-                            <div class="status-label">TIME</div>
+                <div class="apps-list">
+                    <a href="https://hardihuang.github.io/iris/index.html" target="_blank" class="app-item touch-feedback">
+                        <div class="app-icon">💜</div>
+                        <div class="app-info">
+                            <div class="app-name">Echo × Iris</div>
+                            <div class="app-desc">AI 助手介紹頁面</div>
                         </div>
-                        <div class="status-item">
-                            <div class="status-value">8</div>
-                            <div class="status-label">APPS</div>
+                        <div class="app-arrow">↗</div>
+                    </a>
+                    
+                    <a href="terminal.html" class="app-item touch-feedback">
+                        <div class="app-icon">💬</div>
+                        <div class="app-info">
+                            <div class="app-name">AI 對話</div>
+                            <div class="app-desc">與我聊天對話</div>
                         </div>
-                        <div class="status-item">
-                            <div class="status-value" style="color: #00ff00;">●</div>
-                            <div class="status-label">ONLINE</div>
+                        <div class="app-arrow">▶</div>
+                    </a>
+                    
+                    <a href="games/index.html" class="app-item touch-feedback">
+                        <div class="app-icon">🎮</div>
+                        <div class="app-info">
+                            <div class="app-name">遊戲中心</div>
+                            <div class="app-desc">坦克大戰/連連看</div>
                         </div>
-                    </div>
+                        <div class="app-arrow">▶</div>
+                    </a>
+                    
+                    <a href="system.html" class="app-item touch-feedback">
+                        <div class="app-icon">⚙️</div>
+                        <div class="app-info">
+                            <div class="app-name">系統信息</div>
+                            <div class="app-desc">監控系統狀態</div>
+                        </div>
+                        <div class="app-arrow">▶</div>
+                    </a>
+                    
+                    <a href="#" class="app-item touch-feedback" onclick="alert('待開發：日曆功能')">
+                        <div class="app-icon">📅</div>
+                        <div class="app-info">
+                            <div class="app-name">日曆</div>
+                            <div class="app-desc">日程管理</div>
+                        </div>
+                        <div class="app-arrow">▶</div>
+                    </a>
+                    
+                    <a href="#" class="app-item touch-feedback" onclick="alert('待開發：天氣功能')">
+                        <div class="app-icon">🌤️</div>
+                        <div class="app-info">
+                            <div class="app-name">天氣</div>
+                            <div class="app-desc">天氣預報</div>
+                        </div>
+                        <div class="app-arrow">▶</div>
+                    </a>
+                    
+                    <a href="#" class="app-item touch-feedback" onclick="alert('待開發：文件管理')">
+                        <div class="app-icon">📁</div>
+                        <div class="app-info">
+                            <div class="app-name">文件管理</div>
+                            <div class="app-desc">瀏覽本地文件</div>
+                        </div>
+                        <div class="app-arrow">▶</div>
+                    </a>
+                    
+                    <a href="#" class="app-item touch-feedback" onclick="alert('待開發：設置功能')">
+                        <div class="app-icon">🔧</div>
+                        <div class="app-info">
+                            <div class="app-name">設置</div>
+                            <div class="app-desc">系統設置</div>
+                        </div>
+                        <div class="app-arrow">▶</div>
+                    </a>
                 </div>
             </div>
         </div>
         
-        <!-- 底部滚动条 -->
-        <div class="footer">
-            <div class="scrolling-text">
-                <span style="color: #00ffff;">SYSTEM READY</span>
-                <span style="color: #555; margin: 0 10px;">|</span>
-                <span style="color: #ff00ff;">MG 豆豆 v2026.4.1</span>
-                <span style="color: #555; margin: 0 10px;">|</span>
-                <span style="color: #00ff00;">9 APPS LOADED</span>
-                <span style="color: #555; margin: 0 10px;">|</span>
-                <span style="color: #00ffff;">TOUCH ENABLED</span>
-                <span style="color: #555; margin: 0 10px;">|</span>
-                <span style="color: #ff00ff;">Orange Pi 3B</span>
-                <span style="color: #555; margin: 0 10px;">|</span>
-                <span style="color: #00ff00;">800×480</span>
-                <span style="color: #555; margin: 0 10px;">|</span>
+        <!-- 底部狀態欄 -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="clock">--:--</span>
+                <span>📶</span>
+                <span>🔋</span>
+            </div>
+            <div class="status-right">
+                <span>🦞 MG OpenClaw Team</span>
+                <span>● 運行中</span>
             </div>
         </div>
     </div>
     
     <script>
-        // 星期映射
-        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-        
-        // 更新时钟（北京时间 UTC+8）
+        // 更新時鐘
         function updateClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            
-            // 左上角大时钟
-            document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
-            
-            // 日期和星期
-            const year = now.getFullYear();
-            const month = now.getMonth() + 1;
-            const date = now.getDate();
-            const weekday = weekdays[now.getDay()];
-            document.getElementById('clockInfo').textContent = `${year}年${month}月${date}日 ${weekday}`;
-            
-            // 右下角系统状态时间
-            document.getElementById('sysClock').textContent = `${hours}:${minutes}`;
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
         }
         
-        setInterval(updateClock, 1000);
         updateClock();
+        setInterval(updateClock, 1000);
         
-        // 全屏切换
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-            }
-        }
-        
-        // 触摸反馈优化
-        document.querySelectorAll('.app-card, .fullscreen-btn, .btn-iris').forEach(el => {
+        // 觸控反饋
+        document.querySelectorAll('.touch-feedback').forEach(el => {
             el.addEventListener('touchstart', function() {
-                this.style.opacity = '0.7';
+                this.style.opacity = '0.8';
             });
             
             el.addEventListener('touchend', function() {
