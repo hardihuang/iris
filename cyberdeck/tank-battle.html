@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>双人坦克大战 - Echo × Iris</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        .game-container {
+            text-align: center;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .subtitle {
+            color: #a0a0b0;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            margin: 0 auto 8px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            max-width: 700px;
+        }
+
+        .player-score {
+            text-align: center;
+        }
+
+        .player-score h3 {
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+
+        .player-score .score {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .player1 .score { color: #4facfe; }
+        .player2 .score { color: #f5576c; }
+
+        #gameCanvas {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: #0a0a15;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            touch-action: none;
+        }
+
+        .controls {
+            display: none;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-start:active {
+            transform: scale(0.95);
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-reset:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .game-over h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-over p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            margin-top: 15px;
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        /* 觸控按鈕 */
+        .touch-controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-top: 5px;
+        }
+
+        .touch-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 150px;
+        }
+
+        .touch-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .touch-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .touch-btn.shoot {
+            background: rgba(245, 87, 108, 0.5);
+            border-color: #f5576c;
+            grid-column: 2;
+        }
+
+        .touch-btn.empty {
+            visibility: hidden;
+        }
+
+        .player1 .touch-btn {
+            border-color: #4facfe;
+        }
+
+        .player1 .touch-btn.shoot {
+            background: rgba(79, 172, 254, 0.5);
+            border-color: #4facfe;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🦞 双人坦克大战 🦞</h1>
+        <p class="subtitle">Echo × Iris 特别版 - 龙虾出品</p>
+
+        <div class="scoreboard">
+            <div class="player-score player1">
+                <h3>🔵 玩家 1</h3>
+                <div class="score" id="score1">0</div>
+            </div>
+            <div class="player-score player2">
+                <h3>🔴 玩家 2</h3>
+                <div class="score" id="score2">0</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="320"></canvas>
+
+        <!-- 觸控按鈕 -->
+        <div class="touch-controls">
+            <div class="touch-pad player1">
+                <div class="touch-btn empty"></div>
+                <div class="touch-btn" data-player="1" data-action="up">⬆️</div>
+                <div class="touch-btn empty"></div>
+                <div class="touch-btn" data-player="1" data-action="left">⬅️</div>
+                <div class="touch-btn shoot" data-player="1" data-action="shoot">🔫</div>
+                <div class="touch-btn" data-player="1" data-action="right">➡️</div>
+                <div class="touch-btn empty"></div>
+                <div class="touch-btn" data-player="1" data-action="down">⬇️</div>
+                <div class="touch-btn empty"></div>
+            </div>
+            <div>
+                <button class="btn btn-start" onclick="startGame()">🎮 开始</button>
+                <button class="btn btn-reset" onclick="resetGame()">🔄 重置</button>
+            </div>
+            <div class="touch-pad player2">
+                <div class="touch-btn empty"></div>
+                <div class="touch-btn" data-player="2" data-action="up">⬆️</div>
+                <div class="touch-btn empty"></div>
+                <div class="touch-btn" data-player="2" data-action="left">⬅️</div>
+                <div class="touch-btn shoot" data-player="2" data-action="shoot">🔫</div>
+                <div class="touch-btn" data-player="2" data-action="right">➡️</div>
+                <div class="touch-btn empty"></div>
+                <div class="touch-btn" data-player="2" data-action="down">⬇️</div>
+                <div class="touch-btn empty"></div>
+            </div>
+        </div>
+
+
+
+        <div class="footer">
+            <p>Made with 🦞 by Echo for Iris | <a href="https://github.com/hardihuang/iris" target="_blank">GitHub</a></p>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>游戏结束!</h2>
+        <p id="winnerText"></p>
+        <button class="btn btn-start" onclick="resetGame()">再来一局</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 游戏状态
+        let gameRunning = false;
+        let score1 = 0;
+        let score2 = 0;
+
+        // 坦克类
+        class Tank {
+            constructor(x, y, color, controls) {
+                this.x = x;
+                this.y = y;
+                this.width = 35;
+                this.height = 35;
+                this.color = color;
+                this.speed = 4;
+                this.direction = 'up';
+                this.controls = controls;
+                this.bullets = [];
+                this.lastShot = 0;
+                this.shootDelay = 500;
+                this.health = 3;
+                this.touchActive = { up: false, down: false, left: false, right: false, shoot: false };
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                
+                // 根据方向旋转
+                let angle = 0;
+                if (this.direction === 'down') angle = Math.PI;
+                if (this.direction === 'left') angle = -Math.PI/2;
+                if (this.direction === 'right') angle = Math.PI/2;
+                ctx.rotate(angle);
+
+                // 坦克主体
+                ctx.fillStyle = this.color;
+                ctx.fillRect(-this.width/2, -this.height/2, this.width, this.height);
+                
+                // 坦克炮管
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(-4, -this.height/2 - 8, 8, 16);
+                
+                // 坦克履带
+                ctx.fillStyle = '#333';
+                ctx.fillRect(-this.width/2 - 4, -this.height/2, 6, this.height);
+                ctx.fillRect(this.width/2 - 2, -this.height/2, 6, this.height);
+
+                ctx.restore();
+
+                // 绘制生命值
+                this.drawHealth();
+            }
+
+            drawHealth() {
+                const barWidth = 40;
+                const barHeight = 5;
+                const x = this.x;
+                const y = this.y - 12;
+                
+                ctx.fillStyle = '#333';
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                ctx.fillStyle = this.health > 1 ? '#4ade80' : '#f87171';
+                ctx.fillRect(x, y, (this.health / 3) * barWidth, barHeight);
+            }
+
+            move(direction, obstacles) {
+                this.direction = direction;
+                let newX = this.x;
+                let newY = this.y;
+
+                if (direction === 'up') newY -= this.speed;
+                if (direction === 'down') newY += this.speed;
+                if (direction === 'left') newX -= this.speed;
+                if (direction === 'right') newX += this.speed;
+
+                // 边界检测
+                if (newX >= 0 && newX <= canvas.width - this.width &&
+                    newY >= 0 && newY <= canvas.height - this.height) {
+                    // 障碍物碰撞检测
+                    let collides = false;
+                    for (let obs of obstacles) {
+                        if (this.checkCollision({x: newX, y: newY}, obs)) {
+                            collides = true;
+                            break;
+                        }
+                    }
+                    if (!collides) {
+                        this.x = newX;
+                        this.y = newY;
+                    }
+                }
+            }
+
+            checkCollision(rect1, rect2) {
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + this.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + this.height > rect2.y;
+            }
+
+            shoot() {
+                const now = Date.now();
+                if (now - this.lastShot < this.shootDelay) return;
+                
+                this.lastShot = now;
+                
+                let bulletX = this.x + this.width/2 - 5;
+                let bulletY = this.y + this.height/2 - 5;
+                
+                if (this.direction === 'up') bulletY = this.y - 10;
+                if (this.direction === 'down') bulletY = this.y + this.height;
+                if (this.direction === 'left') bulletX = this.x - 10;
+                if (this.direction === 'right') bulletX = this.x + this.width;
+
+                this.bullets.push({
+                    x: bulletX,
+                    y: bulletY,
+                    width: 10,
+                    height: 10,
+                    speed: 10,
+                    direction: this.direction
+                });
+            }
+
+            updateBullets(obstacles, enemyTank) {
+                for (let i = this.bullets.length - 1; i >= 0; i--) {
+                    let bullet = this.bullets[i];
+                    
+                    if (bullet.direction === 'up') bullet.y -= bullet.speed;
+                    if (bullet.direction === 'down') bullet.y += bullet.speed;
+                    if (bullet.direction === 'left') bullet.x -= bullet.speed;
+                    if (bullet.direction === 'right') bullet.x += bullet.speed;
+
+                    // 移除出界的子弹
+                    if (bullet.x < 0 || bullet.x > canvas.width || 
+                        bullet.y < 0 || bullet.y > canvas.height) {
+                        this.bullets.splice(i, 1);
+                        continue;
+                    }
+
+                    // 障碍物碰撞
+                    for (let obs of obstacles) {
+                        if (this.checkBulletCollision(bullet, obs)) {
+                            this.bullets.splice(i, 1);
+                            break;
+                        }
+                    }
+
+                    // 坦克碰撞
+                    if (this.checkBulletCollision(bullet, enemyTank)) {
+                        enemyTank.health--;
+                        this.bullets.splice(i, 1);
+                        if (enemyTank.health <= 0) {
+                            return true; // 击中坦克
+                        }
+                    }
+                }
+                return false;
+            }
+
+            checkBulletCollision(bullet, rect) {
+                return bullet.x < rect.x + rect.width &&
+                       bullet.x + bullet.width > rect.x &&
+                       bullet.y < rect.y + rect.height &&
+                       bullet.y + bullet.height > rect.y;
+            }
+
+            drawBullets() {
+                ctx.fillStyle = '#fff';
+                for (let bullet of this.bullets) {
+                    ctx.beginPath();
+                    ctx.arc(bullet.x + 5, bullet.y + 5, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // 障碍物类
+        class Obstacle {
+            constructor(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+            }
+
+            draw() {
+                ctx.fillStyle = '#4a5568';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // 添加纹理
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        // 初始化游戏对象
+        let tank1, tank2, obstacles;
+
+        function initGame() {
+            tank1 = new Tank(80, 140, '#4facfe', {
+                up: 'KeyW',
+                down: 'KeyS',
+                left: 'KeyA',
+                right: 'KeyD',
+                shoot: 'Space'
+            });
+
+            tank2 = new Tank(685, 140, '#f5576c', {
+                up: 'ArrowUp',
+                down: 'ArrowDown',
+                left: 'ArrowLeft',
+                right: 'ArrowRight',
+                shoot: 'Enter'
+            });
+
+            // 创建障碍物（适配 320 高度）
+            obstacles = [
+                new Obstacle(280, 60, 40, 100),
+                new Obstacle(480, 60, 40, 100),
+                new Obstacle(280, 180, 40, 100),
+                new Obstacle(480, 180, 40, 100),
+                new Obstacle(380, 135, 40, 50)
+            ];
+        }
+
+        // 键盘状态
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // 觸控按鈕事件
+        document.querySelectorAll('.touch-btn').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const player = btn.dataset.player;
+                const action = btn.dataset.action;
+                if (player === '1') {
+                    tank1.touchActive[action] = true;
+                } else {
+                    tank2.touchActive[action] = true;
+                }
+            });
+
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                const player = btn.dataset.player;
+                const action = btn.dataset.action;
+                if (player === '1') {
+                    tank1.touchActive[action] = false;
+                } else {
+                    tank2.touchActive[action] = false;
+                }
+            });
+
+            // 鼠標支持（用於測試）
+            btn.addEventListener('mousedown', () => {
+                const player = btn.dataset.player;
+                const action = btn.dataset.action;
+                if (player === '1') {
+                    tank1.touchActive[action] = true;
+                } else {
+                    tank2.touchActive[action] = true;
+                }
+            });
+
+            btn.addEventListener('mouseup', () => {
+                const player = btn.dataset.player;
+                const action = btn.dataset.action;
+                if (player === '1') {
+                    tank1.touchActive[action] = false;
+                } else {
+                    tank2.touchActive[action] = false;
+                }
+            });
+
+            btn.addEventListener('mouseleave', () => {
+                const player = btn.dataset.player;
+                const action = btn.dataset.action;
+                if (player === '1') {
+                    tank1.touchActive[action] = false;
+                } else {
+                    tank2.touchActive[action] = false;
+                }
+            });
+        });
+
+        // 处理输入
+        function handleInput() {
+            if (!gameRunning) return;
+
+            // 玩家 1（鍵盤 + 觸控）
+            if (keys[tank1.controls.up] || tank1.touchActive.up) tank1.move('up', obstacles);
+            if (keys[tank1.controls.down] || tank1.touchActive.down) tank1.move('down', obstacles);
+            if (keys[tank1.controls.left] || tank1.touchActive.left) tank1.move('left', obstacles);
+            if (keys[tank1.controls.right] || tank1.touchActive.right) tank1.move('right', obstacles);
+            if (keys[tank1.controls.shoot] || tank1.touchActive.shoot) tank1.shoot();
+
+            // 玩家 2（鍵盤 + 觸控）
+            if (keys[tank2.controls.up] || tank2.touchActive.up) tank2.move('up', obstacles);
+            if (keys[tank2.controls.down] || tank2.touchActive.down) tank2.move('down', obstacles);
+            if (keys[tank2.controls.left] || tank2.touchActive.left) tank2.move('left', obstacles);
+            if (keys[tank2.controls.right] || tank2.touchActive.right) tank2.move('right', obstacles);
+            if (keys[tank2.controls.shoot] || tank2.touchActive.shoot) tank2.shoot();
+        }
+
+        // 更新游戏
+        function update() {
+            if (!gameRunning) return;
+
+            // 更新子弹
+            const hit1 = tank2.updateBullets(obstacles, tank1);
+            const hit2 = tank1.updateBullets(obstacles, tank2);
+
+            if (hit1) {
+                score1++;
+                document.getElementById('score1').textContent = score1;
+                if (score1 >= 5) {
+                    endGame(1);
+                } else {
+                    resetPositions();
+                }
+            }
+
+            if (hit2) {
+                score2++;
+                document.getElementById('score2').textContent = score2;
+                if (score2 >= 5) {
+                    endGame(2);
+                } else {
+                    resetPositions();
+                }
+            }
+        }
+
+        function resetPositions() {
+            tank1.x = 80;
+            tank1.y = 140;
+            tank1.health = 3;
+            tank1.bullets = [];
+            
+            tank2.x = 685;
+            tank2.y = 140;
+            tank2.health = 3;
+            tank2.bullets = [];
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 清空画布
+            ctx.fillStyle = '#0a0a15';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制障碍物
+            for (let obs of obstacles) {
+                obs.draw();
+            }
+
+            // 绘制坦克
+            tank1.draw();
+            tank2.draw();
+
+            // 绘制子弹
+            tank1.drawBullets();
+            tank2.drawBullets();
+        }
+
+        // 游戏循环
+        function gameLoop() {
+            handleInput();
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (gameRunning) return;
+            gameRunning = true;
+            document.getElementById('gameOver').style.display = 'none';
+        }
+
+        // 重置游戏
+        function resetGame() {
+            score1 = 0;
+            score2 = 0;
+            document.getElementById('score1').textContent = '0';
+            document.getElementById('score2').textContent = '0';
+            document.getElementById('gameOver').style.display = 'none';
+            initGame();
+            gameRunning = true;
+        }
+
+        // 结束游戏
+        function endGame(winner) {
+            gameRunning = false;
+            const winnerText = winner === 1 ? '🔵 玩家 1 获胜!' : '🔴 玩家 2 获胜!';
+            document.getElementById('winnerText').textContent = winnerText;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // 初始化
+        initGame();
+        gameLoop();
+    </script>
+</body>
+</html>

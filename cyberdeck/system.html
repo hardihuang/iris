@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>系統信息</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            width: 800px;
+            height: 480px;
+            color: #fff;
+            overflow: hidden;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-card h3 {
+            font-size: 1rem;
+            color: #a0a0b0;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.low { background: linear-gradient(90deg, #4ade80, #22c55e); }
+        .progress-fill.medium { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .progress-fill.high { background: linear-gradient(90deg, #f87171, #ef4444); }
+
+        .detail-list {
+            list-style: none;
+            font-size: 0.9rem;
+        }
+
+        .detail-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-list li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-back {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-back:active {
+            transform: scale(0.95);
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .refresh-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>⚙️ 系統信息</h1>
+
+    <div class="info-grid">
+        <!-- CPU 信息 -->
+        <div class="info-card">
+            <h3>🖥️ CPU 使用率</h3>
+            <div class="info-value" id="cpuUsage">25%</div>
+            <div class="progress-bar">
+                <div class="progress-fill low" id="cpuProgress" style="width: 25%"></div>
+            </div>
+            <ul class="detail-list" style="margin-top: 15px;">
+                <li><span>核心數</span><span>4 核</span></li>
+                <li><span>架構</span><span>Cortex-A55</span></li>
+                <li><span>頻率</span><span>1.8 GHz</span></li>
+            </ul>
+        </div>
+
+        <!-- 內存信息 -->
+        <div class="info-card">
+            <h3>💾 內存使用</h3>
+            <div class="info-value" id="memUsage">1.2GB / 4GB</div>
+            <div class="progress-bar">
+                <div class="progress-fill low" id="memProgress" style="width: 30%"></div>
+            </div>
+            <ul class="detail-list" style="margin-top: 15px;">
+                <li><span>已用</span><span>1.2GB</span></li>
+                <li><span>可用</span><span>2.8GB</span></li>
+                <li><span>類型</span><span>LPDDR4</span></li>
+            </ul>
+        </div>
+
+        <!-- 存儲信息 -->
+        <div class="info-card">
+            <h3>💿 存儲空間</h3>
+            <div class="info-value" id="storageUsage">8.5GB / 32GB</div>
+            <div class="progress-bar">
+                <div class="progress-fill medium" id="storageProgress" style="width: 27%"></div>
+            </div>
+            <ul class="detail-list" style="margin-top: 15px;">
+                <li><span>已用</span><span>8.5GB</span></li>
+                <li><span>可用</span><span>23.5GB</span></li>
+                <li><span>類型</span><span>eMMC</span></li>
+            </ul>
+        </div>
+
+        <!-- 網絡信息 -->
+        <div class="info-card">
+            <h3>🌐 網絡狀態</h3>
+            <div class="info-value" style="font-size: 1.2rem;">📶 WiFi 已連接</div>
+            <ul class="detail-list" style="margin-top: 15px;">
+                <li><span>IP 地址</span><span>192.168.1.100</span></li>
+                <li><span>子網掩碼</span><span>255.255.255.0</span></li>
+                <li><span>網關</span><span>192.168.1.1</span></li>
+                <li><span>DNS</span><span>8.8.8.8</span></li>
+            </ul>
+        </div>
+
+        <!-- 系統信息 -->
+        <div class="info-card">
+            <h3>📋 系統版本</h3>
+            <ul class="detail-list">
+                <li><span>系統</span><span>Ubuntu 22.04</span></li>
+                <li><span>內核</span><span>5.10.110</span></li>
+                <li><span>運行時間</span><span>2 天 5 小時</span></li>
+                <li><span>主機名</span><span>orangepi3b</span></li>
+            </ul>
+        </div>
+
+        <!-- 溫度信息 -->
+        <div class="info-card">
+            <h3>🌡️ 溫度監控</h3>
+            <div class="info-value" style="font-size: 1.2rem;">🌡️ 45°C</div>
+            <div class="progress-bar">
+                <div class="progress-fill low" style="width: 45%"></div>
+            </div>
+            <ul class="detail-list" style="margin-top: 15px;">
+                <li><span>CPU 溫度</span><span>45°C</span></li>
+                <li><span>風扇轉速</span><span>1200 RPM</span></li>
+                <li><span>狀態</span><span>正常</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshData()">🔄 刷新</button>
+    <a href="index.html" class="btn-back">← 返回首頁</a>
+
+    <script>
+        // 模擬刷新數據（實際應從系統讀取）
+        function refreshData() {
+            // 模擬 CPU 使用率
+            const cpu = Math.floor(Math.random() * 40) + 10;
+            document.getElementById('cpuUsage').textContent = cpu + '%';
+            document.getElementById('cpuProgress').style.width = cpu + '%';
+            
+            // 更新進度條顏色
+            updateProgressColor('cpuProgress', cpu);
+
+            // 模擬內存使用
+            const mem = (Math.random() * 2 + 1).toFixed(1);
+            document.getElementById('memUsage').textContent = mem + 'GB / 4GB';
+            const memPercent = (mem / 4) * 100;
+            document.getElementById('memProgress').style.width = memPercent + '%';
+            updateProgressColor('memProgress', memPercent);
+
+            alert('數據已刷新！\n\n（實際應用中會從系統讀取真實數據）');
+        }
+
+        function updateProgressColor(id, percent) {
+            const el = document.getElementById(id);
+            el.classList.remove('low', 'medium', 'high');
+            if (percent < 50) el.classList.add('low');
+            else if (percent < 80) el.classList.add('medium');
+            else el.classList.add('high');
+        }
+
+        // 觸控優化
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('touchstart', function() {
+                this.style.opacity = '0.7';
+            });
+            
+            el.addEventListener('touchend', function() {
+                this.style.opacity = '1';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Terminal - MG 豆豆 CyberDeck</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0d0d2d 100%);
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                transparent 1px,
+                transparent 2px,
+                rgba(0, 255, 255, 0.03) 3px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .container {
+            width: 800px;
+            height: 480px;
+            display: flex;
+            flex-direction: column;
+            padding: 4px;
+        }
+        
+        .header {
+            height: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 0 10px;
+            margin-bottom: 4px;
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        .btn-back {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            color: #00ffff;
+            padding: 4px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-back:active {
+            background: rgba(0, 255, 255, 0.2);
+        }
+        
+        .chat-container {
+            flex: 1;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .message {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            max-width: 85%;
+        }
+        
+        .message.user {
+            background: rgba(0, 255, 255, 0.15);
+            border-left: 3px solid #00ffff;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.ai {
+            background: rgba(255, 0, 255, 0.1);
+            border-left: 3px solid #ff00ff;
+        }
+        
+        .input-area {
+            height: 50px;
+            display: flex;
+            gap: 4px;
+            background: rgba(10, 15, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 6px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #00ffff;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+        }
+        
+        .chat-input:focus {
+            border-color: #00ffff;
+        }
+        
+        .btn-send {
+            width: 60px;
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(255, 0, 255, 0.2));
+            border: 1px solid rgba(0, 255, 255, 0.4);
+            border-radius: 4px;
+            color: #00ffff;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+        
+        .btn-send:active {
+            background: rgba(0, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 8px 12px;
+            color: #888;
+            font-size: 10px;
+        }
+        
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>💬 AI TERMINAL</h1>
+            <a href="index.html" class="btn-back">← 返回</a>
+        </header>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="message ai">
+                你好！我是 MG 豆豆，你的 AI 助手 🦞<br>
+                有什麼可以幫你的嗎？
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            MG 豆豆正在思考<span>.</span><span>.</span><span>.</span>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="輸入消息..." onkeypress="handleKeyPress(event)">
+            <button class="btn-send" onclick="sendMessage()">發送</button>
+        </div>
+    </div>
+    
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            const container = document.getElementById('chatContainer');
+            
+            // 添加用戶消息
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.textContent = message;
+            container.appendChild(userMsg);
+            
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+            
+            // 顯示正在輸入
+            document.getElementById('typingIndicator').style.display = 'block';
+            
+            // 模擬 AI 回復（此處應調用真實 API）
+            setTimeout(() => {
+                document.getElementById('typingIndicator').style.display = 'none';
+                
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'message ai';
+                aiMsg.innerHTML = '收到你的消息：<br>"' + message + '"<br><br>此處將連接 AI API 返回真實回復。';
+                container.appendChild(aiMsg);
+                container.scrollTop = container.scrollHeight;
+            }, 1000);
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // 觸控優化
+        document.querySelectorAll('.btn-send, .btn-back').forEach(el => {
+            el.addEventListener('touchstart', function() {
+                this.style.opacity = '0.7';
+            });
+            
+            el.addEventListener('touchend', function() {
+                this.style.opacity = '1';
+            });
+        });
+    </script>
+</body>
+</html>
