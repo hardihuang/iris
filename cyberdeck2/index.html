@@ -523,16 +523,38 @@
         // 星期映射
         const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
         
-        // 更新時鐘和日期
+        // 更新時鐘和日期（使用亞洲上海時區）
         function updateDateTime() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
             
-            const month = now.getMonth() + 1;
-            const date = now.getDate();
-            const weekday = weekdays[now.getDay()];
-            document.getElementById('datetime').textContent = `${month}月${date}日 ${weekday} ${hours}:${minutes}`;
+            // 使用 toLocaleString 確保正確的時區（Asia/Shanghai）
+            const options = {
+                timeZone: 'Asia/Shanghai',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                month: 'numeric',
+                day: 'numeric',
+                weekday: 'short'
+            };
+            
+            const formatter = new Intl.DateTimeFormat('zh-CN', options);
+            const parts = formatter.formatToParts(now);
+            
+            const month = parts.find(p => p.type === 'month').value;
+            const date = parts.find(p => p.type === 'day').value;
+            const weekday = parts.find(p => p.type === 'weekday').value;
+            const hours = parts.find(p => p.type === 'hour').value;
+            const minutes = parts.find(p => p.type === 'minute').value;
+            
+            // 轉換星期格式
+            const weekdayMap = {
+                '周一': '週一', '周二': '週二', '周三': '週三',
+                '周四': '週四', '周五': '週五', '周六': '週六', '周日': '週日'
+            };
+            const formattedWeekday = weekdayMap[weekday] || weekday;
+            
+            document.getElementById('datetime').textContent = `${month}月${date}日 ${formattedWeekday} ${hours}:${minutes}`;
         }
         
         updateDateTime();
