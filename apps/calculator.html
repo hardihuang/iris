@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔢 计算器</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      width: 800px;
+      height: 480px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      height: 100%;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部标题栏 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e8eaed;
+      margin-bottom: 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-icon {
+      font-size: 24px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .history-toggle {
+      padding: 8px 16px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 8px;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .history-toggle:hover {
+      background: #e0e0e0;
+    }
+
+    /* 主内容区 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* 计算器主体 */
+    .calculator {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* 显示屏 */
+    .display {
+      background: #fafbfc;
+      border: 2px solid #e8eaed;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: right;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .display-expression {
+      font-size: 16px;
+      color: #999;
+      min-height: 24px;
+      word-break: break-all;
+    }
+
+    .display-result {
+      font-size: 48px;
+      font-weight: bold;
+      color: #333;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+    }
+
+    /* 按钮网格 */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      flex: 1;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* 数字按钮 */
+    .btn-number {
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    .btn-number:hover {
+      background: #e8eaed;
+    }
+
+    /* 运算符按钮 */
+    .btn-operator {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+    }
+
+    .btn-operator:hover {
+      box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
+    }
+
+    /* 功能按钮 */
+    .btn-function {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .btn-function:hover {
+      background: #ffe69c;
+    }
+
+    /* 清除按钮 */
+    .btn-clear {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .btn-clear:hover {
+      background: #f5c6cb;
+    }
+
+    /* 等号按钮 */
+    .btn-equal {
+      background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(136, 216, 176, 0.3);
+    }
+
+    .btn-equal:hover {
+      box-shadow: 0 6px 16px rgba(136, 216, 176, 0.4);
+    }
+
+    /* 零按钮跨两列 */
+    .btn-zero {
+      grid-column: span 2;
+    }
+
+    /* 历史记录区 */
+    .history-panel {
+      width: 250px;
+      background: #fafbfc;
+      border: 2px solid #e8eaed;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e8eaed;
+    }
+
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      padding: 10px;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      background: #f0f0f0;
+    }
+
+    .history-expr {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 4px;
+    }
+
+    .history-result {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      font-family: 'Courier New', monospace;
+    }
+
+    .history-empty {
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      padding: 40px 0;
+    }
+
+    .clear-history {
+      margin-top: 10px;
+      padding: 10px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 8px;
+      color: #666;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .clear-history:hover {
+      background: #e0e0e0;
+    }
+
+    /* 隐藏 */
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部标题栏 -->
+    <div class="header">
+      <div class="header-left">
+        <span class="header-icon">🔢</span>
+        <span class="header-title">计算器</span>
+      </div>
+      <button class="history-toggle" id="historyToggle">📜 历史记录</button>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 计算器主体 -->
+      <div class="calculator">
+        <!-- 显示屏 -->
+        <div class="display">
+          <div class="display-expression" id="expression"></div>
+          <div class="display-result" id="result">0</div>
+        </div>
+
+        <!-- 按钮网格 -->
+        <div class="buttons">
+          <!-- 第一行 -->
+          <button class="btn btn-clear" data-action="clear">AC</button>
+          <button class="btn btn-function" data-action="delete">⌫</button>
+          <button class="btn btn-operator" data-action="operator" data-value="/">÷</button>
+          <button class="btn btn-operator" data-action="operator" data-value="*">×</button>
+
+          <!-- 第二行 -->
+          <button class="btn btn-number" data-action="number" data-value="7">7</button>
+          <button class="btn btn-number" data-action="number" data-value="8">8</button>
+          <button class="btn btn-number" data-action="number" data-value="9">9</button>
+          <button class="btn btn-operator" data-action="operator" data-value="-">−</button>
+
+          <!-- 第三行 -->
+          <button class="btn btn-number" data-action="number" data-value="4">4</button>
+          <button class="btn btn-number" data-action="number" data-value="5">5</button>
+          <button class="btn btn-number" data-action="number" data-value="6">6</button>
+          <button class="btn btn-operator" data-action="operator" data-value="+">+</button>
+
+          <!-- 第四行 -->
+          <button class="btn btn-number" data-action="number" data-value="1">1</button>
+          <button class="btn btn-number" data-action="number" data-value="2">2</button>
+          <button class="btn btn-number" data-action="number" data-value="3">3</button>
+          <button class="btn btn-equal" data-action="calculate">=</button>
+
+          <!-- 第五行 -->
+          <button class="btn btn-number btn-zero" data-action="number" data-value="0">0</button>
+          <button class="btn btn-number" data-action="decimal" data-value=".">.</button>
+          <button class="btn btn-function" data-action="percent">%</button>
+        </div>
+      </div>
+
+      <!-- 历史记录面板 -->
+      <div class="history-panel hidden" id="historyPanel">
+        <div class="history-title">📜 计算历史</div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">暂无记录</div>
+        </div>
+        <button class="clear-history hidden" id="clearHistory">清空历史</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 状态变量
+    let currentValue = '0';
+    let previousValue = '';
+    let operator = '';
+    let shouldResetScreen = false;
+    let history = [];
+
+    // DOM 元素
+    const expressionEl = document.getElementById('expression');
+    const resultEl = document.getElementById('result');
+    const historyPanel = document.getElementById('historyPanel');
+    const historyList = document.getElementById('historyList');
+    const historyToggle = document.getElementById('historyToggle');
+    const clearHistoryBtn = document.getElementById('clearHistory');
+
+    // 更新显示
+    function updateDisplay() {
+      resultEl.textContent = currentValue;
+      if (previousValue && operator) {
+        expressionEl.textContent = `${previousValue} ${getOperatorSymbol(operator)}`;
+      } else {
+        expressionEl.textContent = '';
+      }
+    }
+
+    // 获取运算符符号
+    function getOperatorSymbol(op) {
+      const symbols = {
+        '+': '+',
+        '-': '−',
+        '*': '×',
+        '/': '÷'
+      };
+      return symbols[op] || op;
+    }
+
+    // 添加数字
+    function appendNumber(number) {
+      if (shouldResetScreen) {
+        currentValue = number;
+        shouldResetScreen = false;
+      } else {
+        currentValue = currentValue === '0' ? number : currentValue + number;
+      }
+      updateDisplay();
+    }
+
+    // 添加小数点
+    function appendDecimal() {
+      if (shouldResetScreen) {
+        currentValue = '0.';
+        shouldResetScreen = false;
+      } else if (!currentValue.includes('.')) {
+        currentValue += '.';
+      }
+      updateDisplay();
+    }
+
+    // 选择运算符
+    function chooseOperator(op) {
+      if (operator !== '' && !shouldResetScreen) {
+        calculate();
+      }
+      previousValue = currentValue;
+      operator = op;
+      shouldResetScreen = true;
+      updateDisplay();
+    }
+
+    // 计算
+    function calculate() {
+      if (operator === '' || previousValue === '') return;
+
+      const prev = parseFloat(previousValue);
+      const current = parseFloat(currentValue);
+      let result;
+
+      switch (operator) {
+        case '+':
+          result = prev + current;
+          break;
+        case '-':
+          result = prev - current;
+          break;
+        case '*':
+          result = prev * current;
+          break;
+        case '/':
+          if (current === 0) {
+            result = 'Error';
+          } else {
+            result = prev / current;
+          }
+          break;
+        default:
+          return;
+      }
+
+      // 添加到历史
+      addToHistory(`${previousValue} ${getOperatorSymbol(operator)} ${currentValue}`, result);
+
+      currentValue = result.toString();
+      operator = '';
+      previousValue = '';
+      shouldResetScreen = true;
+      updateDisplay();
+    }
+
+    // 清除
+    function clear() {
+      currentValue = '0';
+      previousValue = '';
+      operator = '';
+      shouldResetScreen = false;
+      updateDisplay();
+    }
+
+    // 删除
+    function deleteLast() {
+      if (currentValue.length === 1 || (currentValue.length === 2 && currentValue[0] === '-')) {
+        currentValue = '0';
+      } else {
+        currentValue = currentValue.slice(0, -1);
+      }
+      updateDisplay();
+    }
+
+    // 百分比
+    function percent() {
+      currentValue = (parseFloat(currentValue) / 100).toString();
+      updateDisplay();
+    }
+
+    // 添加到历史
+    function addToHistory(expr, result) {
+      if (result === 'Error') return;
+      
+      history.unshift({ expr, result: result.toString() });
+      if (history.length > 20) {
+        history.pop();
+      }
+      updateHistoryDisplay();
+    }
+
+    // 更新历史显示
+    function updateHistoryDisplay() {
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">暂无记录</div>';
+        clearHistoryBtn.classList.add('hidden');
+        return;
+      }
+
+      historyList.innerHTML = history.map((item, index) => `
+        <div class="history-item" data-index="${index}">
+          <div class="history-expr">${item.expr} =</div>
+          <div class="history-result">${item.result}</div>
+        </div>
+      `).join('');
+
+      clearHistoryBtn.classList.remove('hidden');
+
+      // 点击历史记录加载
+      historyList.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const index = parseInt(item.dataset.index);
+          currentValue = history[index].result;
+          shouldResetScreen = true;
+          updateDisplay();
+        });
+      });
+    }
+
+    // 清空历史
+    function clearHistory() {
+      history = [];
+      updateHistoryDisplay();
+    }
+
+    // 切换历史面板
+    function toggleHistory() {
+      historyPanel.classList.toggle('hidden');
+    }
+
+    // 事件监听
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        const value = btn.dataset.value;
+
+        switch (action) {
+          case 'number':
+            appendNumber(value);
+            break;
+          case 'operator':
+            chooseOperator(value);
+            break;
+          case 'decimal':
+            appendDecimal();
+            break;
+          case 'calculate':
+            calculate();
+            break;
+          case 'clear':
+            clear();
+            break;
+          case 'delete':
+            deleteLast();
+            break;
+          case 'percent':
+            percent();
+            break;
+        }
+      });
+    });
+
+    historyToggle.addEventListener('click', toggleHistory);
+    clearHistoryBtn.addEventListener('click', clearHistory);
+
+    // 键盘支持
+    document.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') {
+        appendNumber(e.key);
+      } else if (e.key === '.') {
+        appendDecimal();
+      } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+        chooseOperator(e.key);
+      } else if (e.key === 'Enter' || e.key === '=') {
+        calculate();
+      } else if (e.key === 'Escape') {
+        clear();
+      } else if (e.key === 'Backspace') {
+        deleteLast();
+      } else if (e.key === '%') {
+        percent();
+      }
+    });
+
+    // 初始化
+    updateDisplay();
+  </script>
+</body>
+</html>

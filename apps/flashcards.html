@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 单词卡片</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f7fa;
+      width: 800px;
+      height: 480px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      width: 100%;
+      height: 100%;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部标题栏 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e8eaed;
+      margin-bottom: 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-icon {
+      font-size: 24px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #f5576c;
+    }
+
+    /* 主内容区 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    /* 卡片容器 */
+    .card-container {
+      position: relative;
+      width: 400px;
+      height: 240px;
+      perspective: 1000px;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s;
+      cursor: pointer;
+    }
+
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .card-front {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+
+    .card-back {
+      background: white;
+      color: #333;
+      transform: rotateY(180deg);
+      border: 2px solid #e8eaed;
+    }
+
+    .word-text {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .word-phonetic {
+      font-size: 16px;
+      opacity: 0.9;
+      font-family: 'Courier New', monospace;
+    }
+
+    .word-meaning {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .word-example {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .flip-hint {
+      position: absolute;
+      bottom: 15px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    /* 进度指示 */
+    .progress-bar {
+      width: 400px;
+      height: 6px;
+      background: #e8eaed;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    /* 控制按钮 */
+    .controls {
+      display: flex;
+      gap: 15px;
+    }
+
+    .control-btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-hard {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .btn-hard:hover {
+      background: #f5c6cb;
+    }
+
+    .btn-good {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .btn-good:hover {
+      background: #ffe69c;
+    }
+
+    .btn-easy {
+      background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 100%);
+      color: white;
+    }
+
+    .btn-easy:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(136, 216, 176, 0.3);
+    }
+
+    .btn-next {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+    }
+
+    .btn-next:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+    }
+
+    /* 底部工具栏 */
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e8eaed;
+    }
+
+    .tool-btn {
+      padding: 10px 20px;
+      border: 2px solid #e8eaed;
+      background: white;
+      border-radius: 8px;
+      color: #666;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tool-btn:hover {
+      border-color: #f5576c;
+      color: #f5576c;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部标题栏 -->
+    <div class="header">
+      <div class="header-left">
+        <span class="header-icon">📖</span>
+        <span class="header-title">单词卡片</span>
+      </div>
+      <div class="header-stats">
+        <div class="stat-item">
+          <span>今日学习:</span>
+          <span class="stat-value" id="todayCount">0</span>
+        </div>
+        <div class="stat-item">
+          <span>已掌握:</span>
+          <span class="stat-value" id="masteredCount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 卡片容器 -->
+      <div class="card-container">
+        <div class="card" id="card">
+          <!-- 正面 -->
+          <div class="card-face card-front">
+            <div class="word-text" id="wordText">Hello</div>
+            <div class="word-phonetic" id="wordPhonetic">/həˈloʊ/</div>
+            <div class="flip-hint">点击翻转查看释义</div>
+          </div>
+          <!-- 背面 -->
+          <div class="card-face card-back">
+            <div class="word-meaning" id="wordMeaning">你好</div>
+            <div class="word-example" id="wordExample">Hello, how are you?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 进度条 -->
+      <div class="progress-section">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">
+          <span id="currentIndex">1</span> / <span id="totalCount">10</span>
+        </div>
+      </div>
+
+      <!-- 控制按钮 -->
+      <div class="controls" id="controls">
+        <button class="control-btn btn-hard" id="btnHard">困难</button>
+        <button class="control-btn btn-good" id="btnGood">一般</button>
+        <button class="control-btn btn-easy" id="btnEasy">简单</button>
+      </div>
+
+      <div class="controls hidden" id="nextControl">
+        <button class="control-btn btn-next" id="btnNext">下一个 →</button>
+      </div>
+    </div>
+
+    <!-- 底部工具栏 -->
+    <div class="toolbar">
+      <button class="tool-btn" id="btnShuffle">🔀 随机</button>
+      <button class="tool-btn" id="btnReset">🔄 重置</button>
+      <button class="tool-btn" id="btnAdd">➕ 添加</button>
+    </div>
+  </div>
+
+  <script>
+    // 内置词库
+    const defaultWords = [
+      { word: 'Hello', phonetic: '/həˈloʊ/', meaning: '你好', example: 'Hello, how are you?' },
+      { word: 'World', phonetic: '/wɜːrld/', meaning: '世界', example: 'The world is beautiful.' },
+      { word: 'Study', phonetic: '/ˈstʌdi/', meaning: '学习', example: 'I study English every day.' },
+      { word: 'Computer', phonetic: '/kəmˈpjuːtər/', meaning: '电脑', example: 'I use a computer for work.' },
+      { word: 'Science', phonetic: '/ˈsaɪəns/', meaning: '科学', example: 'Science helps us understand the world.' },
+      { word: 'Dream', phonetic: '/driːm/', meaning: '梦想', example: 'Never give up on your dreams.' },
+      { word: 'Future', phonetic: '/ˈfjuːtʃər/', meaning: '未来', example: 'The future is full of possibilities.' },
+      { word: 'Knowledge', phonetic: '/ˈnɒlɪdʒ/', meaning: '知识', example: 'Knowledge is power.' },
+      { word: 'Challenge', phonetic: '/ˈtʃælɪndʒ/', meaning: '挑战', example: 'Every challenge is an opportunity.' },
+      { word: 'Success', phonetic: '/səkˈses/', meaning: '成功', example: 'Hard work leads to success.' }
+    ];
+
+    // 状态变量
+    let words = [...defaultWords];
+    let currentIndex = 0;
+    let isFlipped = false;
+    let todayCount = 0;
+    let masteredCount = 0;
+    let wordStatus = {}; // 记录每个单词的掌握程度
+
+    // DOM 元素
+    const card = document.getElementById('card');
+    const wordText = document.getElementById('wordText');
+    const wordPhonetic = document.getElementById('wordPhonetic');
+    const wordMeaning = document.getElementById('wordMeaning');
+    const wordExample = document.getElementById('wordExample');
+    const progressFill = document.getElementById('progressFill');
+    const currentIndexEl = document.getElementById('currentIndex');
+    const totalCountEl = document.getElementById('totalCount');
+    const todayCountEl = document.getElementById('todayCount');
+    const masteredCountEl = document.getElementById('masteredCount');
+    const controls = document.getElementById('controls');
+    const nextControl = document.getElementById('nextControl');
+
+    // 初始化
+    function init() {
+      loadStats();
+      shuffleWords();
+      showCard();
+      updateProgress();
+    }
+
+    // 显示当前卡片
+    function showCard() {
+      const word = words[currentIndex];
+      wordText.textContent = word.word;
+      wordPhonetic.textContent = word.phonetic;
+      wordMeaning.textContent = word.meaning;
+      wordExample.textContent = word.example;
+      
+      // 重置翻转状态
+      isFlipped = false;
+      card.classList.remove('flipped');
+      
+      // 显示评分按钮，隐藏下一个按钮
+      controls.classList.remove('hidden');
+      nextControl.classList.add('hidden');
+    }
+
+    // 翻转卡片
+    function flipCard() {
+      isFlipped = !isFlipped;
+      card.classList.toggle('flipped');
+    }
+
+    // 更新进度
+    function updateProgress() {
+      const progress = ((currentIndex + 1) / words.length) * 100;
+      progressFill.style.width = progress + '%';
+      currentIndexEl.textContent = currentIndex + 1;
+      totalCountEl.textContent = words.length;
+    }
+
+    // 评分
+    function rateWord(difficulty) {
+      const word = words[currentIndex];
+      wordStatus[word.word] = difficulty;
+      
+      todayCount++;
+      if (difficulty === 'easy') {
+        masteredCount++;
+      }
+      
+      saveStats();
+      updateStatsDisplay();
+      
+      // 显示下一个按钮
+      controls.classList.add('hidden');
+      nextControl.classList.remove('hidden');
+    }
+
+    // 下一个单词
+    function nextWord() {
+      currentIndex++;
+      if (currentIndex >= words.length) {
+        currentIndex = 0;
+        alert('🎉 本轮学习完成！继续加油～');
+      }
+      showCard();
+      updateProgress();
+    }
+
+    // 随机打乱
+    function shuffleWords() {
+      for (let i = words.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [words[i], words[j]] = [words[j], words[i]];
+      }
+      currentIndex = 0;
+      showCard();
+      updateProgress();
+    }
+
+    // 重置进度
+    function resetProgress() {
+      currentIndex = 0;
+      wordStatus = {};
+      showCard();
+      updateProgress();
+    }
+
+    // 添加单词
+    function addWord() {
+      const word = prompt('请输入单词:');
+      if (!word) return;
+      
+      const phonetic = prompt('请输入音标 (可选):') || '';
+      const meaning = prompt('请输入释义:');
+      if (!meaning) return;
+      
+      const example = prompt('请输入例句 (可选):') || '';
+      
+      words.push({ word, phonetic, meaning, example });
+      totalCountEl.textContent = words.length;
+      alert('✅ 单词添加成功！');
+    }
+
+    // 保存统计
+    function saveStats() {
+      localStorage.setItem('flashcard_todayCount', todayCount);
+      localStorage.setItem('flashcard_masteredCount', masteredCount);
+      localStorage.setItem('flashcard_wordStatus', JSON.stringify(wordStatus));
+    }
+
+    // 加载统计
+    function loadStats() {
+      todayCount = parseInt(localStorage.getItem('flashcard_todayCount')) || 0;
+      masteredCount = parseInt(localStorage.getItem('flashcard_masteredCount')) || 0;
+      wordStatus = JSON.parse(localStorage.getItem('flashcard_wordStatus')) || {};
+      updateStatsDisplay();
+    }
+
+    // 更新统计显示
+    function updateStatsDisplay() {
+      todayCountEl.textContent = todayCount;
+      masteredCountEl.textContent = masteredCount;
+    }
+
+    // 事件监听
+    card.addEventListener('click', flipCard);
+    
+    document.getElementById('btnHard').addEventListener('click', () => rateWord('hard'));
+    document.getElementById('btnGood').addEventListener('click', () => rateWord('good'));
+    document.getElementById('btnEasy').addEventListener('click', () => rateWord('easy'));
+    document.getElementById('btnNext').addEventListener('click', nextWord);
+    document.getElementById('btnShuffle').addEventListener('click', shuffleWords);
+    document.getElementById('btnReset').addEventListener('click', resetProgress);
+    document.getElementById('btnAdd').addEventListener('click', addWord);
+
+    // 键盘支持
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        flipCard();
+      } else if (e.code === 'ArrowRight') {
+        nextWord();
+      } else if (e.code === 'KeyH') {
+        rateWord('hard');
+      } else if (e.code === 'KeyG') {
+        rateWord('good');
+      } else if (e.code === 'KeyE') {
+        rateWord('easy');
+      }
+    });
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>
