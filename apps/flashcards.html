@@ -260,9 +260,10 @@
     /* 右侧控制区 */
     .right-controls {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 15px;
       justify-content: center;
+      align-items: flex-start;
     }
 
     /* 控制按钮 */
@@ -321,23 +322,24 @@
       box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
     }
 
-    /* 底部工具栏 */
+    /* 工具按钮区 */
     .toolbar {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 12px;
     }
 
     .tool-btn {
-      padding: 10px 20px;
+      padding: 16px 20px;
       border: 2px solid #e8eaed;
       background: white;
-      border-radius: 8px;
+      border-radius: 10px;
       color: #666;
-      font-size: 13px;
+      font-size: 14px;
       cursor: pointer;
       transition: all 0.3s;
+      min-width: 100px;
+      text-align: center;
     }
 
     .tool-btn:hover {
