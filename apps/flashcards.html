@@ -169,12 +169,49 @@
       font-size: 36px;
       font-weight: bold;
       margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
     }
 
     .word-phonetic {
       font-size: 16px;
       opacity: 0.9;
       font-family: 'Courier New', monospace;
+    }
+
+    /* 发音按钮 */
+    .speak-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s;
+      color: white;
+    }
+
+    .speak-btn:hover {
+      background: rgba(255,255,255,0.5);
+      transform: scale(1.1);
+    }
+
+    .speak-btn:active {
+      transform: scale(0.95);
+    }
+
+    .speak-btn.playing {
+      animation: pulse-speaker 1s infinite;
+    }
+
+    @keyframes pulse-speaker {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
     }
 
     .word-meaning {
@@ -344,7 +381,10 @@
           <div class="card" id="card">
             <!-- 正面 -->
             <div class="card-face card-front">
-              <div class="word-text" id="wordText">Hello</div>
+              <div class="word-text">
+                <span id="wordText">Hello</span>
+                <button class="speak-btn" id="speakBtn" title="点击发音">🔊</button>
+              </div>
               <div class="word-phonetic" id="wordPhonetic">/həˈloʊ/</div>
               <div class="flip-hint">点击翻转查看释义</div>
             </div>
@@ -418,6 +458,7 @@
     const wordPhonetic = document.getElementById('wordPhonetic');
     const wordMeaning = document.getElementById('wordMeaning');
     const wordExample = document.getElementById('wordExample');
+    const speakBtn = document.getElementById('speakBtn');
     const progressFill = document.getElementById('progressFill');
     const currentIndexEl = document.getElementById('currentIndex');
     const totalCountEl = document.getElementById('totalCount');
@@ -449,6 +490,45 @@
       // 显示评分按钮，隐藏下一个按钮
       controls.classList.remove('hidden');
       nextControl.classList.add('hidden');
+      
+      // 停止发音动画
+      speakBtn.classList.remove('playing');
+    }
+
+    // 发音功能
+    function speakWord() {
+      const word = words[currentIndex].word;
+      
+      // 检查浏览器是否支持语音合成
+      if ('speechSynthesis' in window) {
+        // 取消之前的发音
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US'; // 英语
+        utterance.rate = 0.9; // 稍微慢一点
+        utterance.pitch = 1;
+        
+        // 开始发音时添加动画
+        utterance.onstart = () => {
+          speakBtn.classList.add('playing');
+        };
+        
+        // 结束发音时移除动画
+        utterance.onend = () => {
+          speakBtn.classList.remove('playing');
+        };
+        
+        // 错误处理
+        utterance.onerror = () => {
+          speakBtn.classList.remove('playing');
+          console.log('发音失败');
+        };
+        
+        window.speechSynthesis.speak(utterance);
+      } else {
+        alert('您的浏览器不支持语音合成功能');
+      }
     }
 
     // 翻转卡片
@@ -551,7 +631,18 @@
     }
 
     // 事件监听
-    card.addEventListener('click', flipCard);
+    card.addEventListener('click', (e) => {
+      // 如果点击的是发音按钮，不翻转卡片
+      if (e.target.id === 'speakBtn') {
+        return;
+      }
+      flipCard();
+    });
+    
+    speakBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止冒泡，避免触发卡片翻转
+      speakWord();
+    });
     
     document.getElementById('btnHard').addEventListener('click', () => rateWord('hard'));
     document.getElementById('btnGood').addEventListener('click', () => rateWord('good'));
