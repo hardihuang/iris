@@ -44,10 +44,31 @@
       margin-bottom: 20px;
     }
 
+    /* 返回按钮 */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 8px;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+
+    .back-btn:hover {
+      background: #e0e0e0;
+      color: #f5576c;
+    }
+
     .header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .header-icon {
@@ -265,6 +286,7 @@
     <!-- 顶部标题栏 -->
     <div class="header">
       <div class="header-left">
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
         <span class="header-icon">🍅</span>
         <span class="header-title">番茄钟</span>
       </div>
