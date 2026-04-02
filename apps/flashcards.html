@@ -324,10 +324,9 @@
     /* 底部工具栏 */
     .toolbar {
       display: flex;
-      justify-content: center;
-      gap: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #e8eaed;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
     }
 
     .tool-btn {
@@ -418,14 +417,14 @@
         <div class="controls hidden" id="nextControl">
           <button class="control-btn btn-next" id="btnNext">下一个 →</button>
         </div>
-      </div>
-    </div>
 
-    <!-- 底部工具栏 -->
-    <div class="toolbar">
-      <button class="tool-btn" id="btnShuffle">🔀 随机</button>
-      <button class="tool-btn" id="btnReset">🔄 重置</button>
-      <button class="tool-btn" id="btnAdd">➕ 添加</button>
+        <!-- 工具按钮 -->
+        <div class="toolbar">
+          <button class="tool-btn" id="btnShuffle">🔀 随机</button>
+          <button class="tool-btn" id="btnReset">🔄 重置</button>
+          <button class="tool-btn" id="btnAdd">➕ 添加</button>
+        </div>
+      </div>
     </div>
   </div>
 
