@@ -435,6 +435,9 @@
         // 音频播放失败时静默处理
       }
     }
+
+    // 更新显示
+    function updateDisplay() {
       resultEl.textContent = currentValue;
       if (previousValue && operator) {
         expressionEl.textContent = `${previousValue} ${getOperatorSymbol(operator)}`;
