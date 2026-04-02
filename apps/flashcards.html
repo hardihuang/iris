@@ -532,10 +532,48 @@
       }
     }
 
+    // 播放音效
+    function playSound(type) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        if (type === 'flip') {
+          // 翻牌：柔和的"唰"声
+          oscillator.frequency.value = 400;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.15);
+        } else if (type === 'rate') {
+          // 评分：清脆的"叮"
+          oscillator.frequency.value = 800;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } else if (type === 'next') {
+          // 下一个：轻快的"嗒"
+          oscillator.frequency.value = 600;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.08);
+        }
+      } catch (e) {}
+    }
+
     // 翻转卡片
     function flipCard() {
       isFlipped = !isFlipped;
       card.classList.toggle('flipped');
+      playSound('flip');
     }
 
     // 更新进度
@@ -548,6 +586,7 @@
 
     // 评分
     function rateWord(difficulty) {
+      playSound('rate');
       const word = words[currentIndex];
       wordStatus[word.word] = difficulty;
       
@@ -566,6 +605,7 @@
 
     // 下一个单词
     function nextWord() {
+      playSound('next');
       currentIndex++;
       if (currentIndex >= words.length) {
         currentIndex = 0;

@@ -388,8 +388,53 @@
     const historyToggle = document.getElementById('historyToggle');
     const clearHistoryBtn = document.getElementById('clearHistory');
 
-    // 更新显示
-    function updateDisplay() {
+    // 播放音效
+    function playSound(type) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        if (type === 'number') {
+          // 数字键：短促的"滴"声
+          oscillator.frequency.value = 800;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.05);
+        } else if (type === 'operator') {
+          // 运算符：稍低的"咚"声
+          oscillator.frequency.value = 600;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.08);
+        } else if (type === 'equal') {
+          // 等号：清脆的"叮"声
+          oscillator.frequency.value = 1200;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.15);
+        } else if (type === 'clear') {
+          // 清除：低沉的"嗡"声
+          oscillator.frequency.value = 400;
+          oscillator.type = 'sine';
+          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        }
+      } catch (e) {
+        // 音频播放失败时静默处理
+      }
+    }
       resultEl.textContent = currentValue;
       if (previousValue && operator) {
         expressionEl.textContent = `${previousValue} ${getOperatorSymbol(operator)}`;
@@ -564,24 +609,31 @@
 
         switch (action) {
           case 'number':
+            playSound('number');
             appendNumber(value);
             break;
           case 'operator':
+            playSound('operator');
             chooseOperator(value);
             break;
           case 'decimal':
+            playSound('number');
             appendDecimal();
             break;
           case 'calculate':
+            playSound('equal');
             calculate();
             break;
           case 'clear':
+            playSound('clear');
             clear();
             break;
           case 'delete':
+            playSound('clear');
             deleteLast();
             break;
           case 'percent':
+            playSound('operator');
             percent();
             break;
         }
