@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, height=480">
+  <title>🏎️ CyberRacer - Echo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 800px; height: 480px; overflow: hidden;
+      background: #1a1a2e; color: #fff;
+    }
+    .container { width: 100%; height: 100%; position: relative; }
+    canvas { display: block; }
+
+    /* HUD */
+    .hud {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 8px 16px; display: flex; justify-content: space-between; align-items: center;
+      background: linear-gradient(180deg, rgba(0,0,0,0.6), transparent);
+      z-index: 10; pointer-events: none;
+    }
+    .hud-left { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 16px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 6px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s;
+    }
+    .home-btn:hover { background: rgba(255,255,255,0.3); }
+    .game-title { font-size: 15px; font-weight: 700; letter-spacing: 2px; }
+    .game-title span { color: #4ade80; }
+
+    .hud-center { display: flex; gap: 25px; }
+    .hud-stat { text-align: center; }
+    .hud-val { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .hud-label { font-size: 9px; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; }
+    .speed-val { color: #4ade80; }
+    .score-val { color: #fbbf24; }
+    .time-val { color: #e9d5ff; }
+
+    .hud-right { display: flex; align-items: center; gap: 8px; }
+
+    /* 速度表 */
+    .speedo {
+      position: absolute; bottom: 15px; right: 20px;
+      width: 100px; height: 50px; z-index: 10; pointer-events: none;
+    }
+    .speedo-text {
+      font-size: 32px; font-weight: 900; color: #4ade80;
+      text-shadow: 0 0 15px rgba(74,222,128,0.6);
+      text-align: center;
+    }
+    .speedo-unit { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; }
+
+    /* 開始/結束覆蓋層 */
+    .overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 20;
+    }
+    .overlay-title {
+      font-size: 44px; font-weight: 900; letter-spacing: 4px;
+      background: linear-gradient(135deg, #4ade80, #a855f7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .overlay-sub { font-size: 14px; color: rgba(255,255,255,0.6); margin-bottom: 25px; letter-spacing: 2px; }
+    .start-btn {
+      padding: 14px 50px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #667eea, #a855f7);
+      color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+      letter-spacing: 2px; transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(168,85,247,0.5);
+    }
+    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(168,85,247,0.6); }
+    .controls-hint { margin-top: 18px; font-size: 12px; color: rgba(255,255,255,0.4); }
+    .result-stats { display: flex; gap: 30px; margin-bottom: 20px; }
+    .r-stat { text-align: center; }
+    .r-val { font-size: 28px; font-weight: 800; }
+    .r-label { font-size: 11px; color: rgba(255,255,255,0.5); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <canvas id="canvas" width="800" height="480"></canvas>
+
+    <div class="hud">
+      <div class="hud-left">
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn">🏠</a>
+        <div class="game-title">CYBER<span>RACER</span></div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-stat"><div class="hud-val speed-val" id="hudSpeed">0</div><div class="hud-label">KM/H</div></div>
+        <div class="hud-stat"><div class="hud-val score-val" id="hudScore">0</div><div class="hud-label">Score</div></div>
+        <div class="hud-stat"><div class="hud-val time-val" id="hudTime">0.0</div><div class="hud-label">Time</div></div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-stat"><div class="hud-val" style="color:#f87171;font-size:18px;" id="hudLives">♥♥♥</div><div class="hud-label">Lives</div></div>
+      </div>
+    </div>
+
+    <div class="speedo">
+      <div class="speedo-text" id="speedoNum">0</div>
+      <div class="speedo-unit">KM/H</div>
+    </div>
+
+    <!-- 開始畫面 -->
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-title">CYBERRACER</div>
+      <div class="overlay-sub">偽 3D 極速飛馳</div>
+      <button class="start-btn" onclick="startGame()">▶ 開始遊戲</button>
+      <div class="controls-hint">← → 或 A D 轉向 ｜ ↑ 加速 ↓ 減速 ｜ 躲避車輛得分</div>
+    </div>
+
+    <!-- 結束畫面 -->
+    <div class="overlay hidden" id="endOverlay">
+      <div class="overlay-title" style="font-size:36px;">GAME OVER</div>
+      <div class="overlay-sub" id="endReason"></div>
+      <div class="result-stats">
+        <div class="r-stat"><div class="r-val score-val" id="finalScore">0</div><div class="r-label">總分</div></div>
+        <div class="r-stat"><div class="r-val speed-val" id="finalTopSpeed">0</div><div class="r-label">最高速度</div></div>
+        <div class="r-stat"><div class="r-val time-val" id="finalTime">0</div><div class="r-label">存活時間</div></div>
+      </div>
+      <button class="start-btn" onclick="startGame()">再來一局</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 800, H = 480;
+
+    // ─── 遊戲參數 ───
+    const ROAD_W = 2000;
+    const SEG_LEN = 200;
+    const CAM_H = 1000;
+    const CAM_DEPTH = 1 / Math.tan((80/2) * Math.PI/180);
+    const DRAW_DIST = 150;
+    const TOTAL_SEGS = 600;
+
+    let segments = [];
+    let cars = [];
+    let playerX = 0;       // -1 到 1
+    let speed = 0;
+    let maxSpeed = SEG_LEN * 60;
+    let accel = maxSpeed / 5;
+    let decel = -maxSpeed;
+    let braking = -maxSpeed / 2.5;
+    let offRoadDecel = -maxSpeed / 3;
+    let offRoadLimit = maxSpeed / 3;
+    let position = 0;
+    let score = 0;
+    let topSpeed = 0;
+    let lives = 3;
+    let gameTime = 0;
+    let gameRunning = false;
+    let keys = {};
+
+    // ─── 建造道路 ───
+    function buildRoad() {
+      segments = [];
+      for (let i = 0; i < TOTAL_SEGS; i++) {
+        const seg = {
+          index: i,
+          p: { world: { z: i * SEG_LEN }, camera: {}, screen: {} },
+          curve: 0,
+          hill: 0,
+          color: {}
+        };
+
+        // 彎道
+        if (i > 20 && i < 60) seg.curve = 3;
+        else if (i > 80 && i < 120) seg.curve = -4;
+        else if (i > 150 && i < 200) seg.curve = 5;
+        else if (i > 220 && i < 280) seg.curve = -3;
+        else if (i > 300 && i < 350) seg.curve = 6;
+        else if (i > 380 && i < 430) seg.curve = -5;
+        else if (i > 450 && i < 500) seg.curve = 4;
+        else if (i > 520 && i < 570) seg.curve = -6;
+
+        // 上下坡
+        if (i > 40 && i < 70) seg.hill = 20;
+        else if (i > 100 && i < 140) seg.hill = -15;
+        else if (i > 200 && i < 250) seg.hill = 25;
+        else if (i > 320 && i < 360) seg.hill = -20;
+        else if (i > 420 && i < 470) seg.hill = 30;
+
+        // 顏色（交替條紋）
+        const alt = Math.floor(i / 3) % 2;
+        seg.color = {
+          road: alt ? '#3a3a5c' : '#33334d',
+          grass: alt ? '#1a3a1a' : '#163016',
+          rumble: alt ? '#a855f7' : '#7c3aed',
+          lane: alt ? '#ffffff22' : '#ffffff00',
+        };
+
+        segments.push(seg);
+      }
+    }
+
+    // ─── 生成 NPC 車輛 ───
+    function spawnCar() {
+      const ahead = Math.floor(position / SEG_LEN) + 30 + Math.random() * 80;
+      cars.push({
+        z: (ahead % TOTAL_SEGS) * SEG_LEN,
+        x: -0.6 + Math.random() * 1.2,
+        speed: maxSpeed * (0.15 + Math.random() * 0.3),
+        w: 0.3,
+        color: ['#f87171','#fbbf24','#4ade80','#60a5fa','#e879f9'][Math.floor(Math.random()*5)]
+      });
+    }
+
+    // ─── 投影 ───
+    function project(p, camX, camY, camZ) {
+      p.camera.x = (p.world.x || 0) - camX;
+      p.camera.y = (p.world.y || 0) - camY;
+      p.camera.z = (p.world.z || 0) - camZ;
+      if (p.camera.z <= 0) p.camera.z = 0.1;
+      p.screen.scale = CAM_DEPTH / p.camera.z;
+      p.screen.x = Math.round(W/2 + p.screen.scale * p.camera.x * W/2);
+      p.screen.y = Math.round(H/2 - p.screen.scale * p.camera.y * H/2);
+      p.screen.w = Math.round(p.screen.scale * ROAD_W * W/2);
+    }
+
+    // ─── 繪製多邊形 ───
+    function drawPoly(x1,y1,w1, x2,y2,w2, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x1-w1, y1);
+      ctx.lineTo(x1+w1, y1);
+      ctx.lineTo(x2+w2, y2);
+      ctx.lineTo(x2-w2, y2);
+      ctx.fill();
+    }
+
+    // ─── 繪製車輛 ───
+    function drawCar(x, y, w, color) {
+      const h = w * 0.6;
+      // 車身
+      ctx.fillStyle = color;
+      ctx.fillRect(x - w/2, y - h, w, h * 0.7);
+      // 車頂
+      ctx.fillStyle = color + 'cc';
+      ctx.fillRect(x - w*0.35, y - h*1.3, w*0.7, h*0.4);
+      // 車窗
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(x - w*0.3, y - h*1.25, w*0.6, h*0.3);
+      // 車輪
+      ctx.fillStyle = '#222';
+      ctx.fillRect(x - w/2 - 3, y - h*0.2, 6, h*0.25);
+      ctx.fillRect(x + w/2 - 3, y - h*0.2, 6, h*0.25);
+      // 尾燈
+      ctx.fillStyle = '#f87171';
+      ctx.fillRect(x - w/2, y - h*0.5, 4, 4);
+      ctx.fillRect(x + w/2 - 4, y - h*0.5, 4, 4);
+    }
+
+    // ─── 繪製玩家車 ───
+    function drawPlayer(steer) {
+      const cx = W/2 + playerX * W/4;
+      const cy = H - 50;
+      const bw = 50, bh = 25;
+
+      // 陰影
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(cx-bw/2+2, cy+2, bw, 6);
+
+      // 車身
+      const grad = ctx.createLinearGradient(cx-bw/2, cy-bh, cx+bw/2, cy);
+      grad.addColorStop(0, '#a855f7');
+      grad.addColorStop(1, '#667eea');
+      ctx.fillStyle = grad;
+      ctx.fillRect(cx-bw/2, cy-bh, bw, bh);
+
+      // 車頂
+      ctx.fillStyle = '#7c3aed';
+      ctx.fillRect(cx-bw*0.35, cy-bh*1.8, bw*0.7, bh*0.6);
+
+      // 擋風玻璃
+      ctx.fillStyle = '#4ade80aa';
+      ctx.fillRect(cx-bw*0.3, cy-bh*1.7, bw*0.6, bh*0.4);
+
+      // 車輪
+      ctx.fillStyle = '#333';
+      ctx.fillRect(cx-bw/2-4, cy-5, 8, 10);
+      ctx.fillRect(cx+bw/2-4, cy-5, 8, 10);
+
+      // 前燈
+      ctx.fillStyle = '#4ade80';
+      ctx.shadowColor = '#4ade80';
+      ctx.shadowBlur = 10;
+      ctx.fillRect(cx-bw/2, cy-bh+2, 5, 5);
+      ctx.fillRect(cx+bw/2-5, cy-bh+2, 5, 5);
+      ctx.shadowBlur = 0;
+
+      // 引擎光
+      if (speed > maxSpeed * 0.3) {
+        ctx.fillStyle = `rgba(168,85,247,${speed/maxSpeed * 0.6})`;
+        ctx.fillRect(cx-10, cy+2, 20, 5 + speed/maxSpeed * 10);
+      }
+    }
+
+    // ─── 主渲染 ───
+    function render() {
+      ctx.fillStyle = '#0f0f1a';
+      ctx.fillRect(0, 0, W, H);
+
+      // 天空漸變
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, H/2);
+      skyGrad.addColorStop(0, '#1a1040');
+      skyGrad.addColorStop(0.5, '#2d1b69');
+      skyGrad.addColorStop(1, '#4c1d95');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H/2);
+
+      // 星星
+      for (let i = 0; i < 30; i++) {
+        const sx = (i * 127 + position * 0.001) % W;
+        const sy = (i * 73) % (H/2 - 20) + 10;
+        const brightness = 0.3 + Math.sin(Date.now()/500 + i) * 0.2;
+        ctx.fillStyle = `rgba(255,255,255,${brightness})`;
+        ctx.fillRect(sx, sy, 1.5, 1.5);
+      }
+
+      const baseIdx = Math.floor(position / SEG_LEN);
+      let camY = CAM_H + (segments[baseIdx % TOTAL_SEGS].hill || 0) * 5;
+      let dx = 0;
+      let x = 0;
+
+      // 繪製路段
+      for (let n = 0; n < DRAW_DIST; n++) {
+        const idx = (baseIdx + n) % TOTAL_SEGS;
+        const seg = segments[idx];
+        const looped = (baseIdx + n >= TOTAL_SEGS);
+
+        seg.p.world.y = (seg.hill || 0) * 50;
+        seg.p.world.x = x;
+        seg.p.world.z = (looped ? TOTAL_SEGS * SEG_LEN : 0) + idx * SEG_LEN;
+
+        project(seg.p, playerX * ROAD_W - x, camY, position);
+        x += dx;
+        dx += seg.curve;
+
+        if (seg.p.camera.z <= 0 || seg.p.screen.y >= H) continue;
+
+        if (n > 0) {
+          const prev = segments[(baseIdx + n - 1) % TOTAL_SEGS];
+          if (prev.p.screen.y <= seg.p.screen.y) continue;
+
+          const p1 = prev.p.screen, p2 = seg.p.screen;
+
+          // 草地
+          drawPoly(0, p1.y, W, 0, p2.y, W, seg.color.grass);
+          // 路肩
+          drawPoly(p1.x, p1.y, p1.w*1.15, p2.x, p2.y, p2.w*1.15, seg.color.rumble);
+          // 道路
+          drawPoly(p1.x, p1.y, p1.w, p2.x, p2.y, p2.w, seg.color.road);
+          // 車道線
+          drawPoly(p1.x, p1.y, p1.w*0.02, p2.x, p2.y, p2.w*0.02, seg.color.lane);
+          drawPoly(p1.x-p1.w*0.33, p1.y, p1.w*0.015, p2.x-p2.w*0.33, p2.y, p2.w*0.015, seg.color.lane);
+          drawPoly(p1.x+p1.w*0.33, p1.y, p1.w*0.015, p2.x+p2.w*0.33, p2.y, p2.w*0.015, seg.color.lane);
+        }
+      }
+
+      // 繪製 NPC 車輛
+      for (const car of cars) {
+        const carIdx = Math.floor(car.z / SEG_LEN) % TOTAL_SEGS;
+        const seg = segments[carIdx];
+        if (!seg || !seg.p.screen.scale) continue;
+
+        const scale = seg.p.screen.scale;
+        const cx = seg.p.screen.x + scale * car.x * ROAD_W * W/4;
+        const cy = seg.p.screen.y;
+        const cw = scale * ROAD_W * car.w * W/6;
+
+        if (cy > 0 && cy < H && cw > 2) {
+          drawCar(cx, cy, cw, car.color);
+        }
+      }
+
+      // 繪製玩家
+      drawPlayer(keys.left ? -1 : keys.right ? 1 : 0);
+    }
+
+    // ─── 更新 ───
+    function update(dt) {
+      const seg = segments[Math.floor(position / SEG_LEN) % TOTAL_SEGS];
+
+      // 加速/減速
+      if (keys.up) speed += accel * dt;
+      else if (keys.down) speed += braking * dt;
+      else speed += decel * dt * 0.3;
+
+      // 離開道路減速
+      if (Math.abs(playerX) > 0.8) {
+        speed += offRoadDecel * dt;
+        if (speed > offRoadLimit) speed = offRoadLimit;
+      }
+
+      speed = Math.max(0, Math.min(speed, maxSpeed));
+
+      // 轉向
+      const steerSpeed = 3;
+      if (keys.left) playerX -= steerSpeed * dt * (speed / maxSpeed);
+      if (keys.right) playerX += steerSpeed * dt * (speed / maxSpeed);
+
+      // 彎道離心力
+      playerX -= (seg.curve / 5000) * (speed / maxSpeed) * dt * 60;
+
+      // 限制範圍
+      playerX = Math.max(-2, Math.min(2, playerX));
+
+      // 更新位置
+      position += speed * dt;
+      if (position >= TOTAL_SEGS * SEG_LEN) position -= TOTAL_SEGS * SEG_LEN;
+
+      // 更新 NPC 車
+      for (const car of cars) {
+        car.z += car.speed * dt;
+        if (car.z >= TOTAL_SEGS * SEG_LEN) car.z -= TOTAL_SEGS * SEG_LEN;
+
+        // 碰撞檢測
+        const dz = Math.abs(car.z - position);
+        const dx = Math.abs(car.x - playerX);
+        if (dz < SEG_LEN * 0.8 && dx < 0.5 && speed > 0) {
+          // 碰撞！
+          speed *= 0.2;
+          lives--;
+          car.z = position + SEG_LEN * 50; // 移走
+          updateLives();
+          if (lives <= 0) {
+            endGame('碰撞次數過多');
+            return;
+          }
+        }
+      }
+
+      // 生成新車
+      if (Math.random() < 0.02) spawnCar();
+
+      // 清理遠處的車
+      cars = cars.filter(c => {
+        const dz = c.z - position;
+        return dz > -SEG_LEN * 10 && dz < SEG_LEN * 120;
+      });
+
+      // 計分
+      score += speed * dt * 0.001;
+      gameTime += dt;
+      if (speed > topSpeed) topSpeed = speed;
+
+      // 更新 HUD
+      const kmh = Math.round(speed / maxSpeed * 280);
+      document.getElementById('hudSpeed').textContent = kmh;
+      document.getElementById('hudScore').textContent = Math.floor(score);
+      document.getElementById('hudTime').textContent = gameTime.toFixed(1);
+      document.getElementById('speedoNum').textContent = kmh;
+    }
+
+    function updateLives() {
+      document.getElementById('hudLives').textContent = '♥'.repeat(lives) + '♡'.repeat(3 - lives);
+    }
+
+    // ─── 遊戲循環 ───
+    let lastTime = 0;
+    function gameLoop(ts) {
+      if (!gameRunning) return;
+      const dt = Math.min((ts - lastTime) / 1000, 0.05);
+      lastTime = ts;
+
+      update(dt);
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+      buildRoad();
+      cars = [];
+      playerX = 0;
+      speed = 0;
+      position = 0;
+      score = 0;
+      topSpeed = 0;
+      lives = 3;
+      gameTime = 0;
+      updateLives();
+
+      for (let i = 0; i < 8; i++) spawnCar();
+
+      document.getElementById('startOverlay').classList.add('hidden');
+      document.getElementById('endOverlay').classList.add('hidden');
+
+      gameRunning = true;
+      lastTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function endGame(reason) {
+      gameRunning = false;
+      document.getElementById('endReason').textContent = reason;
+      document.getElementById('finalScore').textContent = Math.floor(score);
+      document.getElementById('finalTopSpeed').textContent = Math.round(topSpeed / maxSpeed * 280) + ' km/h';
+      document.getElementById('finalTime').textContent = gameTime.toFixed(1) + 's';
+      document.getElementById('endOverlay').classList.remove('hidden');
+    }
+
+    // ─── 輸入 ───
+    document.addEventListener('keydown', e => {
+      if (e.code === 'ArrowUp' || e.key === 'w') keys.up = true;
+      if (e.code === 'ArrowDown' || e.key === 's') keys.down = true;
+      if (e.code === 'ArrowLeft' || e.key === 'a') keys.left = true;
+      if (e.code === 'ArrowRight' || e.key === 'd') keys.right = true;
+    });
+    document.addEventListener('keyup', e => {
+      if (e.code === 'ArrowUp' || e.key === 'w') keys.up = false;
+      if (e.code === 'ArrowDown' || e.key === 's') keys.down = false;
+      if (e.code === 'ArrowLeft' || e.key === 'a') keys.left = false;
+      if (e.code === 'ArrowRight' || e.key === 'd') keys.right = false;
+    });
+
+    // 初始渲染
+    buildRoad();
+    render();
+  </script>
+</body>
+</html>
