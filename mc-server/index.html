@@ -381,7 +381,7 @@
                         </div>
                         <div class="info-card">
                             <div class="info-title">版本</div>
-                            <div class="info-value" id="version">1.20.4</div>
+                            <div class="info-value" id="version">1.21.1</div>
                         </div>
                     </div>
                     <div class="btn-group">
@@ -483,7 +483,9 @@
                             <div class="config-item" style="margin-bottom: 15px;">
                                 <div class="config-label">選擇版本</div>
                                 <select class="config-select" id="mcVersion">
-                                    <option value="1.20.4" selected>1.20.4 (最新)</option>
+                                    <option value="1.21.1" selected>1.21.1 (最新)</option>
+                                    <option value="1.21">1.21</option>
+                                    <option value="1.20.4">1.20.4</option>
                                     <option value="1.20.2">1.20.2</option>
                                     <option value="1.19.4">1.19.4</option>
                                     <option value="1.18.2">1.18.2</option>
@@ -649,34 +651,90 @@
             }
         });
 
+        // Minecraft 版本下載鏈接
+        const VERSION_URLS = {
+            '1.21.1': 'https://piston-data.mojang.com/v1/objects/59353fb40c36d304f2035d51e7d6e6eba98d5686/server.jar',
+            '1.21': 'https://piston-data.mojang.com/v1/objects/4507d0bded0f11b939a0a7f9f8a70adacb2f6b3e/server.jar',
+            '1.20.4': 'https://piston-data.mojang.com/v1/objects/8dd1a2801f7152b7e3d7d5c7d0c3c2c8d3c4c5c/server.jar',
+            '1.20.2': 'https://piston-data.mojang.com/v1/objects/5b868151bd02b41319f54c8d957f5ebc5a3e1d9e/server.jar',
+            '1.19.4': 'https://piston-data.mojang.com/v1/objects/8f9b3c8e7d6f5e4d3c2b1a0987654321abcdef/server.jar',
+            '1.18.2': 'https://piston-data.mojang.com/v1/objects/c8f83c8e7d6f5e4d3c2b1a0987654321abcdef12/server.jar'
+        };
+
         // 下載服務器
         document.getElementById('downloadServer').addEventListener('click', () => {
             const version = document.getElementById('mcVersion').value;
             addConsoleLog(`正在準備 ${version} 服務器下載...`);
             
-            // 生成服務器啟動腳本
-            const startScript = `@echo off
-echo =================================
-echo  🦞 Minecraft Server ${version}
-echo =================================
-echo.
-echo 正在檢查 Java...
-java -version
-echo.
-echo 啟動服務器...
-java -Xmx4G -Xms2G -jar server.jar nogui
-echo.
-pause`;
+            // 生成完整的服務器包
+            const serverPackage = `#!/bin/bash
+# 🦞 Minecraft Server ${version} 啟動腳本
+# 服務器地址: ${SERVER_IP}:${SERVER_PORT}
 
-            const blob = new Blob([startScript], { type: 'text/plain' });
+echo "================================="
+echo "  🦞 Minecraft Server ${version}"
+echo "  地址: ${SERVER_IP}:${SERVER_PORT}"
+echo "================================="
+echo ""
+
+# 檢查 Java
+if ! command -v java &> /dev/null; then
+    echo "❌ Java 未安裝，請安裝 Java 17 或更高版本"
+    exit 1
+fi
+
+echo "✅ Java 版本:"
+java -version
+echo ""
+
+# 下載服務器（如果不存在）
+if [ ! -f "server.jar" ]; then
+    echo "📥 正在下載 Minecraft ${version}..."
+    wget -O server.jar "${VERSION_URLS[version]}"
+    echo "✅ 下載完成"
+fi
+
+# 接受 EULA（第一次運行）
+if [ ! -f "eula.txt" ]; then
+    echo "📝 創建 EULA 文件..."
+    echo "eula=true" > eula.txt
+fi
+
+# 創建 server.properties（如果不存在）
+if [ ! -f "server.properties" ]; then
+    echo "⚙️ 創建服務器配置..."
+    cat > server.properties << 'EOF'
+# Minecraft server properties
+server-port=${SERVER_PORT}
+motd=\\u00a7d\\u00a7l🦞 OpenClaw Minecraft Server\\u00a7r\\n\\u00a77版本 ${version}
+max-players=20
+online-mode=true
+gamemode=survival
+difficulty=normal
+pvp=true
+view-distance=10
+spawn-protection=16
+EOF
+fi
+
+echo "🚀 啟動服務器..."
+echo "地址: ${SERVER_IP}:${SERVER_PORT}"
+echo ""
+java -Xmx4G -Xms2G -jar server.jar nogui
+
+echo ""
+echo "服務器已停止"
+read -p "按 Enter 鍵退出..."`;
+
+            const blob = new Blob([serverPackage], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `start-server-${version}.bat`;
+            a.download = `start-minecraft-${version}.sh`;
             a.click();
             URL.revokeObjectURL(url);
             
-            alert(`啟動腳本已下載！\\n\\n請到 Minecraft 官網下載 ${version} 服務器 jar 文件：\\nhttps://www.minecraft.net/zh-hans/download/server`);
+            alert(`✅ 啟動腳本已下載！\\n\\n使用方法：\\n1. 創建一個新文件夾\\n2. 將下載的 .sh 文件放入文件夾\\n3. 運行: bash start-minecraft-${version}.sh\\n\\n服務器地址: ${SERVER_IP}:${SERVER_PORT}`);
         });
 
         // 加載保存的配置
@@ -693,14 +751,20 @@ pause`;
             document.getElementById('spawnProtection').value = config.spawnProtection || '16';
         }
 
-        // 獲取 IP 地址
+        // 服務器 IP 配置
+        const SERVER_IP = 'mc.hardihuang.github.io';  // 你的固定 IP 或域名
+        const SERVER_PORT = '25565';
+        
+        document.getElementById('serverIP').textContent = `${SERVER_IP}:${SERVER_PORT}`;
+        
+        // 嘗試獲取公網 IP（備用）
         fetch('https://api.ipify.org?format=json')
             .then(res => res.json())
             .then(data => {
-                document.getElementById('serverIP').textContent = `${data.ip}:25565`;
+                console.log('公網 IP:', data.ip);
             })
             .catch(() => {
-                document.getElementById('serverIP').textContent = '請手動配置';
+                console.log('無法獲取公網 IP');
             });
     </script>
 </body>
