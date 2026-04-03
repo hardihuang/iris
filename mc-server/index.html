@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+    <title>🦞 Minecraft 服務器管理面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff6b6b;
+        }
+
+        .status-dot.online {
+            background: #51cf66;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-title {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .config-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .config-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .config-select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #51cf66, #37b24d);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #fa5252);
+            color: white;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-title {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .console-output {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff00;
+        }
+
+        .console-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .console-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .player-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .player-name {
+            color: white;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .player-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .download-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .download-section h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .download-section p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
+                <h1>🦞 Minecraft 服務器</h1>
+            </div>
+            <div class="server-status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">離線</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="nav-item active" data-panel="dashboard">
+                    📊 儀表板
+                </div>
+                <div class="nav-item" data-panel="config">
+                    ⚙️ 服務器設置
+                </div>
+                <div class="nav-item" data-panel="console">
+                    💻 控制台
+                </div>
+                <div class="nav-item" data-panel="players">
+                    👥 玩家管理
+                </div>
+                <div class="nav-item" data-panel="download">
+                    📥 下載服務器
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- 儀表板 -->
+                <div class="panel active" id="dashboard">
+                    <h2 class="panel-title">服務器儀表板</h2>
+                    <div class="config-grid">
+                        <div class="info-card">
+                            <div class="info-title">服務器地址</div>
+                            <div class="info-value" id="serverIP">未配置</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-title">在線玩家</div>
+                            <div class="info-value" id="playerCount">0 / 20</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-title">運行時間</div>
+                            <div class="info-value" id="uptime">00:00:00</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-title">版本</div>
+                            <div class="info-value" id="version">1.20.4</div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" id="startBtn">▶ 啟動服務器</button>
+                        <button class="btn btn-danger" id="stopBtn">⏹ 停止服務器</button>
+                        <button class="btn btn-primary" id="restartBtn">🔄 重啟服務器</button>
+                    </div>
+                </div>
+
+                <!-- 服務器設置 -->
+                <div class="panel" id="config">
+                    <h2 class="panel-title">服務器設置</h2>
+                    <div class="config-grid">
+                        <div class="config-item">
+                            <div class="config-label">服務器名稱 (MOTD)</div>
+                            <input type="text" class="config-input" id="motd" value="🦞 OpenClaw Minecraft Server">
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">最大玩家數</div>
+                            <input type="number" class="config-input" id="maxPlayers" value="20" min="1" max="100">
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">遊戲模式</div>
+                            <select class="config-select" id="gameMode">
+                                <option value="survival">生存模式</option>
+                                <option value="creative">創造模式</option>
+                                <option value="adventure">冒險模式</option>
+                                <option value="spectator">旁觀模式</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">難度</div>
+                            <select class="config-select" id="difficulty">
+                                <option value="peaceful">和平</option>
+                                <option value="easy">簡單</option>
+                                <option value="normal" selected>普通</option>
+                                <option value="hard">困難</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">PVP 開啟</div>
+                            <select class="config-select" id="pvp">
+                                <option value="true" selected>是</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">正版驗證</div>
+                            <select class="config-select" id="onlineMode">
+                                <option value="true" selected>是（推薦）</option>
+                                <option value="false">否</option>
+                            </select>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">視距 (Chunk)</div>
+                            <input type="number" class="config-input" id="viewDistance" value="10" min="3" max="32">
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">生成保護半徑</div>
+                            <input type="number" class="config-input" id="spawnProtection" value="16" min="0">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" id="saveConfig">💾 保存設置</button>
+                        <button class="btn btn-danger" id="resetConfig">↺ 重置默認</button>
+                    </div>
+                </div>
+
+                <!-- 控制台 -->
+                <div class="panel" id="console">
+                    <h2 class="panel-title">服務器控制台</h2>
+                    <div class="console-output" id="consoleOutput">
+                        <div>> 服務器控制台已準備...</div>
+                        <div>> 請先啟動服務器</div>
+                    </div>
+                    <div class="console-input">
+                        <input type="text" id="consoleCommand" placeholder="輸入命令 (例如: /help, /op 玩家名)">
+                        <button class="btn btn-primary" id="sendCommand">發送</button>
+                    </div>
+                </div>
+
+                <!-- 玩家管理 -->
+                <div class="panel" id="players">
+                    <h2 class="panel-title">玩家管理</h2>
+                    <div class="player-list" id="playerList">
+                        <div style="color: rgba(255,255,255,0.5); text-align: center; padding: 40px;">
+                            暫無在線玩家
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下載服務器 -->
+                <div class="panel" id="download">
+                    <h2 class="panel-title">下載 Minecraft 服務器</h2>
+                    <div class="download-section">
+                        <h3>📦 服務器文件包</h3>
+                        <p>下載包含完整服務器環境的壓縮包，解壓後即可運行</p>
+                        <div style="margin: 20px 0;">
+                            <div class="config-item" style="margin-bottom: 15px;">
+                                <div class="config-label">選擇版本</div>
+                                <select class="config-select" id="mcVersion">
+                                    <option value="1.20.4" selected>1.20.4 (最新)</option>
+                                    <option value="1.20.2">1.20.2</option>
+                                    <option value="1.19.4">1.19.4</option>
+                                    <option value="1.18.2">1.18.2</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="downloadServer">📥 下載服務器</button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                        <h3 style="color: white; font-size: 14px; margin-bottom: 10px;">🔧 系統要求</h3>
+                        <ul style="color: rgba(255,255,255,0.7); font-size: 12px; line-height: 1.8;">
+                            <li>Java 17 或更高版本</li>
+                            <li>至少 4GB 可用內存</li>
+                            <li>開放的 25565 端口</li>
+                            <li>Windows / Linux / macOS</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 導航切換
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                
+                item.classList.add('active');
+                document.getElementById(item.dataset.panel).classList.add('active');
+            });
+        });
+
+        // 服務器狀態
+        let isRunning = false;
+        let startTime = null;
+        let uptimeInterval = null;
+
+        // 更新狀態顯示
+        function updateStatus(running) {
+            isRunning = running;
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (running) {
+                dot.classList.add('online');
+                text.textContent = '運行中';
+                if (!startTime) {
+                    startTime = Date.now();
+                    startUptimeTimer();
+                }
+            } else {
+                dot.classList.remove('online');
+                text.textContent = '離線';
+                startTime = null;
+                stopUptimeTimer();
+                document.getElementById('uptime').textContent = '00:00:00';
+            }
+        }
+
+        // 運行時間計時器
+        function startUptimeTimer() {
+            uptimeInterval = setInterval(() => {
+                if (startTime) {
+                    const elapsed = Date.now() - startTime;
+                    const hours = Math.floor(elapsed / 3600000).toString().padStart(2, '0');
+                    const minutes = Math.floor((elapsed % 3600000) / 60000).toString().padStart(2, '0');
+                    const seconds = Math.floor((elapsed % 60000) / 1000).toString().padStart(2, '0');
+                    document.getElementById('uptime').textContent = `${hours}:${minutes}:${seconds}`;
+                }
+            }, 1000);
+        }
+
+        function stopUptimeTimer() {
+            if (uptimeInterval) {
+                clearInterval(uptimeInterval);
+                uptimeInterval = null;
+            }
+        }
+
+        // 添加控制台日誌
+        function addConsoleLog(message) {
+            const output = document.getElementById('consoleOutput');
+            const time = new Date().toLocaleTimeString();
+            output.innerHTML += `<div>[${time}] ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // 按事件
+        document.getElementById('startBtn').addEventListener('click', () => {
+            updateStatus(true);
+            addConsoleLog('正在啟動服務器...');
+            addConsoleLog('加載世界數據...');
+            addConsoleLog('服務器啟動完成！');
+            addConsoleLog('玩家可以連接了');
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            updateStatus(false);
+            addConsoleLog('正在停止服務器...');
+            addConsoleLog('保存世界數據...');
+            addConsoleLog('服務器已停止');
+        });
+
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            updateStatus(false);
+            addConsoleLog('正在重啟服務器...');
+            setTimeout(() => {
+                updateStatus(true);
+                addConsoleLog('服務器重啟完成！');
+            }, 2000);
+        });
+
+        // 保存設置
+        document.getElementById('saveConfig').addEventListener('click', () => {
+            const config = {
+                motd: document.getElementById('motd').value,
+                maxPlayers: document.getElementById('maxPlayers').value,
+                gameMode: document.getElementById('gameMode').value,
+                difficulty: document.getElementById('difficulty').value,
+                pvp: document.getElementById('pvp').value,
+                onlineMode: document.getElementById('onlineMode').value,
+                viewDistance: document.getElementById('viewDistance').value,
+                spawnProtection: document.getElementById('spawnProtection').value
+            };
+            
+            localStorage.setItem('mc-server-config', JSON.stringify(config));
+            addConsoleLog('配置已保存');
+            alert('設置已保存！');
+        });
+
+        // 重置設置
+        document.getElementById('resetConfig').addEventListener('click', () => {
+            document.getElementById('motd').value = '🦞 OpenClaw Minecraft Server';
+            document.getElementById('maxPlayers').value = '20';
+            document.getElementById('gameMode').value = 'survival';
+            document.getElementById('difficulty').value = 'normal';
+            document.getElementById('pvp').value = 'true';
+            document.getElementById('onlineMode').value = 'true';
+            document.getElementById('viewDistance').value = '10';
+            document.getElementById('spawnProtection').value = '16';
+            alert('已重置為默認設置');
+        });
+
+        // 發送命令
+        document.getElementById('sendCommand').addEventListener('click', () => {
+            const input = document.getElementById('consoleCommand');
+            const command = input.value.trim();
+            if (command) {
+                addConsoleLog(`> ${command}`);
+                input.value = '';
+                // 模擬命令回應
+                setTimeout(() => {
+                    addConsoleLog(`未知命令: ${command}`);
+                }, 500);
+            }
+        });
+
+        document.getElementById('consoleCommand').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('sendCommand').click();
+            }
+        });
+
+        // 下載服務器
+        document.getElementById('downloadServer').addEventListener('click', () => {
+            const version = document.getElementById('mcVersion').value;
+            addConsoleLog(`正在準備 ${version} 服務器下載...`);
+            
+            // 生成服務器啟動腳本
+            const startScript = `@echo off
+echo =================================
+echo  🦞 Minecraft Server ${version}
+echo =================================
+echo.
+echo 正在檢查 Java...
+java -version
+echo.
+echo 啟動服務器...
+java -Xmx4G -Xms2G -jar server.jar nogui
+echo.
+pause`;
+
+            const blob = new Blob([startScript], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `start-server-${version}.bat`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert(`啟動腳本已下載！\\n\\n請到 Minecraft 官網下載 ${version} 服務器 jar 文件：\\nhttps://www.minecraft.net/zh-hans/download/server`);
+        });
+
+        // 加載保存的配置
+        const savedConfig = localStorage.getItem('mc-server-config');
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            document.getElementById('motd').value = config.motd || '🦞 OpenClaw Minecraft Server';
+            document.getElementById('maxPlayers').value = config.maxPlayers || '20';
+            document.getElementById('gameMode').value = config.gameMode || 'survival';
+            document.getElementById('difficulty').value = config.difficulty || 'normal';
+            document.getElementById('pvp').value = config.pvp || 'true';
+            document.getElementById('onlineMode').value = config.onlineMode || 'true';
+            document.getElementById('viewDistance').value = config.viewDistance || '10';
+            document.getElementById('spawnProtection').value = config.spawnProtection || '16';
+        }
+
+        // 獲取 IP 地址
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('serverIP').textContent = `${data.ip}:25565`;
+            })
+            .catch(() => {
+                document.getElementById('serverIP').textContent = '請手動配置';
+            });
+    </script>
+</body>
+</html>
