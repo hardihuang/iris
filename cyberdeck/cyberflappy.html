@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, height=480">
+  <title>🚀 CyberFlappy - Echo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 800px; height: 480px; overflow: hidden;
+      background: #0a0a1a; color: #fff; user-select: none;
+    }
+    canvas { display: block; cursor: pointer; }
+
+    /* 覆盖层 */
+    .overlay {
+      position: absolute; top: 0; left: 0; width: 800px; height: 480px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      z-index: 10; pointer-events: auto;
+    }
+    .overlay.hidden { display: none; }
+    .overlay-bg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+    }
+    .overlay-content { position: relative; z-index: 2; text-align: center; }
+
+    .game-logo {
+      font-size: 52px; font-weight: 900; letter-spacing: 4px; margin-bottom: 5px;
+      background: linear-gradient(135deg, #4ade80, #a855f7, #60a5fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .game-sub { font-size: 14px; color: rgba(255,255,255,0.5); letter-spacing: 3px; margin-bottom: 30px; }
+
+    .play-btn {
+      padding: 14px 55px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+      letter-spacing: 2px; transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(74,222,128,0.4);
+    }
+    .play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(74,222,128,0.5); }
+    .hint { margin-top: 18px; font-size: 12px; color: rgba(255,255,255,0.4); }
+
+    /* 结算 */
+    .result-title { font-size: 38px; font-weight: 900; margin-bottom: 10px; }
+    .result-score { font-size: 64px; font-weight: 900; color: #4ade80; margin-bottom: 5px; }
+    .result-label { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+    .result-best { font-size: 16px; color: #fbbf24; margin-bottom: 25px; }
+
+    .retry-btn {
+      padding: 12px 45px; border: none; border-radius: 10px;
+      background: rgba(168,85,247,0.4); border: 1px solid rgba(168,85,247,0.5);
+      color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      margin: 0 8px;
+    }
+    .retry-btn:hover { background: rgba(168,85,247,0.6); }
+
+    .home-link {
+      padding: 12px 30px; border: none; border-radius: 10px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block;
+      margin: 0 8px;
+    }
+    .home-link:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* HUD */
+    .hud {
+      position: absolute; top: 0; left: 0; width: 800px;
+      padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+      z-index: 5; pointer-events: none;
+    }
+    .hud-left { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+    .hud-home {
+      color: #fff; text-decoration: none; font-size: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 6px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s;
+    }
+    .hud-home:hover { background: rgba(255,255,255,0.25); }
+    .hud-title { font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+    .hud-title span { color: #4ade80; }
+    .hud-score { font-size: 36px; font-weight: 900; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="480"></canvas>
+
+  <div class="hud" id="hud">
+    <div class="hud-left">
+      <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="hud-home" title="返回桌面">🏠</a>
+      <div class="hud-title">CYBER<span>FLAPPY</span></div>
+    </div>
+    <div class="hud-score" id="hudScore">0</div>
+  </div>
+
+  <!-- 开始画面 -->
+  <div class="overlay" id="startScreen">
+    <div class="overlay-bg"></div>
+    <div class="overlay-content">
+      <div class="game-logo">CYBERFLAPPY</div>
+      <div class="game-sub">賽 博 飛 行</div>
+      <button class="play-btn" onclick="startGame()">▶ 開始遊戲</button>
+      <div class="hint">空格鍵 / 點擊 飛行 ｜ 穿越障礙獲取分數</div>
+    </div>
+  </div>
+
+  <!-- 结算画面 -->
+  <div class="overlay hidden" id="resultScreen">
+    <div class="overlay-bg"></div>
+    <div class="overlay-content">
+      <div class="result-title">遊戲結束</div>
+      <div class="result-score" id="finalScore">0</div>
+      <div class="result-label">分數</div>
+      <div class="result-best" id="bestScore">最高記錄: 0</div>
+      <div>
+        <button class="retry-btn" onclick="startGame()">🔄 再來一局</button>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-link">🏠 返回桌面</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const W = 800, H = 480;
+
+    // ─── 状态 ───
+    let gameState = 'start'; // start | playing | dead
+    let score = 0;
+    let bestScore = parseInt(localStorage.getItem('cyberflappy_best')) || 0;
+    let frameCount = 0;
+
+    // ─── 玩家 ───
+    const player = {
+      x: 150, y: H / 2, w: 32, h: 24,
+      vy: 0, gravity: 0.45, jumpForce: -7.5,
+      rotation: 0, trail: []
+    };
+
+    // ─── 管道 ───
+    let pipes = [];
+    const PIPE_W = 55;
+    const GAP = 140;
+    const PIPE_SPEED = 3;
+    const PIPE_INTERVAL = 100; // 帧
+
+    // ─── 粒子 ───
+    let particles = [];
+
+    // ─── 星星背景 ───
+    const stars = [];
+    for (let i = 0; i < 80; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.5 + 0.5,
+        speed: Math.random() * 0.5 + 0.2,
+        alpha: Math.random() * 0.6 + 0.2
+      });
+    }
+
+    // ─── 网格线 ───
+    let gridOffset = 0;
+
+    // ─── Audio ───
+    let audioCtx = null;
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+    function playSound(freq, dur, vol) {
+      if (!audioCtx) return;
+      try {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol || 0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+      } catch(e) {}
+    }
+
+    function jumpSound() { playSound(520, 0.1, 0.12); }
+    function scoreSound() { playSound(880, 0.15, 0.15); playSound(1100, 0.1, 0.08); }
+    function deathSound() { playSound(200, 0.3, 0.2); playSound(150, 0.4, 0.15); }
+
+    // ─── 绘制 ───
+    function drawBackground() {
+      // 渐变背景
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#0a0a2e');
+      grad.addColorStop(0.5, '#1a0a3e');
+      grad.addColorStop(1, '#0a1a2e');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // 网格
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.08)';
+      ctx.lineWidth = 1;
+      gridOffset = (gridOffset + PIPE_SPEED * 0.3) % 40;
+      for (let x = -gridOffset; x < W; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let y = 0; y < H; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // 星星
+      stars.forEach(s => {
+        s.x -= s.speed;
+        if (s.x < 0) { s.x = W; s.y = Math.random() * H; }
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.alpha})`;
+        ctx.fill();
+      });
+    }
+
+    function drawPlayer() {
+      // 拖尾
+      player.trail.push({ x: player.x, y: player.y, alpha: 0.6 });
+      if (player.trail.length > 12) player.trail.shift();
+
+      player.trail.forEach((t, i) => {
+        const a = t.alpha * (i / player.trail.length) * 0.5;
+        const size = 6 + i * 0.8;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(74, 222, 128, ${a})`;
+        ctx.fill();
+      });
+
+      // 旋转
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      const targetRot = Math.min(Math.max(player.vy * 3, -30), 70);
+      player.rotation += (targetRot - player.rotation) * 0.15;
+      ctx.rotate(player.rotation * Math.PI / 180);
+
+      // 飞船身体 - 赛博风
+      // 发光
+      ctx.shadowColor = '#4ade80';
+      ctx.shadowBlur = 15;
+
+      // 主体
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.moveTo(18, 0);
+      ctx.lineTo(-14, -12);
+      ctx.lineTo(-8, 0);
+      ctx.lineTo(-14, 12);
+      ctx.closePath();
+      ctx.fill();
+
+      // 内部
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.moveTo(12, 0);
+      ctx.lineTo(-8, -7);
+      ctx.lineTo(-4, 0);
+      ctx.lineTo(-8, 7);
+      ctx.closePath();
+      ctx.fill();
+
+      // 引擎光
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.arc(-12, 0, 4 + Math.sin(frameCount * 0.3) * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    function drawPipes() {
+      pipes.forEach(pipe => {
+        // 上管道
+        drawCyberPipe(pipe.x, 0, PIPE_W, pipe.topH);
+        // 下管道
+        drawCyberPipe(pipe.x, pipe.topH + GAP, PIPE_W, H - pipe.topH - GAP);
+      });
+    }
+
+    function drawCyberPipe(x, y, w, h) {
+      if (h <= 0) return;
+
+      // 主体
+      const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+      grad.addColorStop(0, 'rgba(88, 28, 135, 0.8)');
+      grad.addColorStop(0.5, 'rgba(126, 34, 206, 0.9)');
+      grad.addColorStop(1, 'rgba(88, 28, 135, 0.8)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, w, h);
+
+      // 边框
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.6)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+
+      // 发光条纹
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.3)';
+      for (let sy = y + 10; sy < y + h - 5; sy += 20) {
+        ctx.fillRect(x + 5, sy, w - 10, 2);
+      }
+
+      // 开口发光
+      const isTop = y === 0;
+      const edgeY = isTop ? y + h : y;
+      ctx.shadowColor = '#a855f7';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(x - 3, edgeY - 2, w + 6, 4);
+      ctx.shadowBlur = 0;
+
+      // 顶帽
+      ctx.fillStyle = 'rgba(147, 51, 234, 0.9)';
+      ctx.fillRect(x - 4, edgeY - 3, w + 8, 6);
+      ctx.strokeStyle = 'rgba(192, 132, 252, 0.5)';
+      ctx.strokeRect(x - 4, edgeY - 3, w + 8, 6);
+    }
+
+    function drawParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.02;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${p.life})`;
+        ctx.fill();
+      }
+    }
+
+    function spawnScoreParticles(x, y) {
+      for (let i = 0; i < 10; i++) {
+        particles.push({
+          x, y, vx: (Math.random() - 0.5) * 4, vy: (Math.random() - 0.5) * 4,
+          r: Math.random() * 3 + 1, life: 1, color: '74, 222, 128'
+        });
+      }
+    }
+
+    function spawnDeathParticles() {
+      for (let i = 0; i < 25; i++) {
+        particles.push({
+          x: player.x, y: player.y,
+          vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+          r: Math.random() * 4 + 1, life: 1,
+          color: Math.random() > 0.5 ? '248, 113, 113' : '168, 85, 247'
+        });
+      }
+    }
+
+    // ─── 逻辑 ───
+    function jump() {
+      if (gameState !== 'playing') return;
+      player.vy = player.jumpForce;
+      jumpSound();
+    }
+
+    function updateGame() {
+      if (gameState !== 'playing') return;
+      frameCount++;
+
+      // 玩家物理
+      player.vy += player.gravity;
+      player.y += player.vy;
+
+      // 天花板/地板碰撞
+      if (player.y < 12) { player.y = 12; player.vy = 0; }
+      if (player.y > H - 12) { die(); return; }
+
+      // 管道生成
+      if (frameCount % PIPE_INTERVAL === 0) {
+        const minTop = 60;
+        const maxTop = H - GAP - 60;
+        const topH = Math.floor(Math.random() * (maxTop - minTop)) + minTop;
+        pipes.push({ x: W, topH, scored: false });
+      }
+
+      // 管道移动 + 碰撞
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        const pipe = pipes[i];
+        pipe.x -= PIPE_SPEED;
+
+        // 移出屏幕
+        if (pipe.x + PIPE_W < 0) { pipes.splice(i, 1); continue; }
+
+        // 得分
+        if (!pipe.scored && pipe.x + PIPE_W < player.x) {
+          pipe.scored = true;
+          score++;
+          document.getElementById('hudScore').textContent = score;
+          scoreSound();
+          spawnScoreParticles(pipe.x + PIPE_W, player.y);
+        }
+
+        // 碰撞检测
+        if (checkCollision(pipe)) { die(); return; }
+      }
+    }
+
+    function checkCollision(pipe) {
+      const px = player.x, py = player.y, pr = 11;
+      // 上管道
+      if (px + pr > pipe.x && px - pr < pipe.x + PIPE_W) {
+        if (py - pr < pipe.topH) return true;
+        if (py + pr > pipe.topH + GAP) return true;
+      }
+      return false;
+    }
+
+    function die() {
+      gameState = 'dead';
+      deathSound();
+      spawnDeathParticles();
+
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('cyberflappy_best', bestScore);
+      }
+
+      setTimeout(() => {
+        document.getElementById('finalScore').textContent = score;
+        document.getElementById('bestScore').textContent = `最高記錄: ${bestScore}`;
+        document.getElementById('resultScreen').classList.remove('hidden');
+      }, 800);
+    }
+
+    // ─── 游戏循环 ───
+    function gameLoop() {
+      drawBackground();
+      drawPipes();
+      drawParticles();
+
+      if (gameState === 'playing' || gameState === 'dead') {
+        drawPlayer();
+        updateGame();
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // ─── 控制 ───
+    function startGame() {
+      initAudio();
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.add('hidden');
+
+      // 重置
+      player.y = H / 2; player.vy = 0; player.rotation = 0; player.trail = [];
+      pipes = []; particles = [];
+      score = 0; frameCount = 0;
+      document.getElementById('hudScore').textContent = '0';
+      gameState = 'playing';
+    }
+
+    // 键盘
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        e.preventDefault();
+        if (gameState === 'playing') jump();
+        else if (gameState === 'start') startGame();
+      }
+    });
+
+    // 点击/触控
+    canvas.addEventListener('click', () => {
+      if (gameState === 'playing') jump();
+    });
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (gameState === 'playing') jump();
+    });
+
+    // 启动
+    gameLoop();
+  </script>
+</body>
+</html>

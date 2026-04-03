@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, height=480">
+  <title>🎵 CyberBeat - Echo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 800px; height: 480px; overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
+    }
+    .container { width: 100%; height: 100%; padding: 12px 16px; display: flex; flex-direction: column; }
+
+    /* Header */
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 14px; margin-bottom: 10px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 6px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s;
+    }
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
+    .app-title { font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+    .app-title span { color: #4ade80; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .bpm-display { font-size: 16px; font-weight: 700; color: #e9d5ff; }
+    .play-btn {
+      padding: 6px 18px; border: none; border-radius: 8px;
+      background: rgba(74,222,128,0.3); border: 1px solid rgba(74,222,128,0.4);
+      color: #4ade80; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .play-btn:hover { background: rgba(74,222,128,0.4); }
+    .play-btn.playing { background: rgba(251,191,36,0.3); border-color: rgba(251,191,36,0.4); color: #fbbf24; }
+    .clear-btn {
+      padding: 6px 16px; border: none; border-radius: 8px;
+      background: rgba(248,113,113,0.2); border: 1px solid rgba(248,113,113,0.3);
+      color: #fca5a5; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .clear-btn:hover { background: rgba(248,113,113,0.3); }
+
+    /* Main */
+    .main { flex: 1; display: flex; gap: 12px; overflow: hidden; }
+
+    /* 左侧打击垫 */
+    .pads-section {
+      width: 280px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    }
+    .pad {
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      cursor: pointer; transition: all 0.15s; position: relative;
+    }
+    .pad:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+    .pad.active {
+      background: rgba(168,85,247,0.4); border-color: rgba(168,85,247,0.6);
+      box-shadow: 0 0 20px rgba(168,85,247,0.5); transform: scale(0.98);
+    }
+    .pad-icon { font-size: 24px; margin-bottom: 6px; }
+    .pad-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+    .pad-num {
+      position: absolute; top: 6px; right: 8px;
+      font-size: 10px; color: rgba(255,255,255,0.3);
+    }
+
+    /* 右侧序列器 */
+    .sequencer-section {
+      flex: 1; background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+      padding: 12px; display: flex; flex-direction: column;
+    }
+    .seq-header {
+      display: flex; justify-content: center; align-items: center;
+      margin-bottom: 10px; padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .seq-title { font-size: 14px; font-weight: 700; color: #e9d5ff; letter-spacing: 2px; }
+
+    .seq-grid { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .seq-row {
+      display: flex; align-items: center; gap: 4px; flex: 1;
+    }
+    .row-label {
+      width: 55px; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .row-icon { font-size: 14px; }
+    .steps { flex: 1; display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; }
+    .step {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px; cursor: pointer; transition: all 0.1s;
+    }
+    .step:hover { background: rgba(255,255,255,0.15); }
+    .step.active {
+      background: rgba(168,85,247,0.5); border-color: rgba(168,85,247,0.7);
+      box-shadow: 0 0 8px rgba(168,85,247,0.4);
+    }
+    .step.current {
+      border-color: rgba(74,222,128,0.8); box-shadow: 0 0 10px rgba(74,222,128,0.5);
+    }
+    .step:nth-child(4n+1) { background: rgba(255,255,255,0.08); }
+
+    /* 底部 BPM 控制 */
+    .footer {
+      margin-top: 10px; padding: 10px 14px;
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; gap: 15px;
+    }
+    .footer-label { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); }
+    .bpm-slider {
+      flex: 1; -webkit-appearance: none; height: 6px; border-radius: 3px;
+      background: rgba(255,255,255,0.15); outline: none;
+    }
+    .bpm-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      cursor: pointer; box-shadow: 0 0 10px rgba(74,222,128,0.5);
+    }
+    .bpm-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+    .bpm-range { font-size: 12px; color: rgba(255,255,255,0.5); min-width: 70px; text-align: right; }
+
+    .status-bar {
+      margin-top: 8px; padding: 6px 14px;
+      background: rgba(0,0,0,0.2); border-radius: 8px;
+      font-size: 12px; color: rgba(255,255,255,0.6);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .status-left { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
+    .status-dot.playing { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        <div class="app-title">CYBER<span>BEAT</span></div>
+      </div>
+      <div class="header-right">
+        <div class="bpm-display">BPM: <span id="bpmValue">120</span></div>
+        <button class="play-btn" id="playBtn">▶ 播放</button>
+        <button class="clear-btn" id="clearBtn">清空</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- 左侧打击垫 -->
+      <div class="pads-section">
+        <div class="pad" data-track="0" onclick="triggerPad(0)"><span class="pad-num">1</span><span class="pad-icon">🥁</span><span class="pad-label">KICK</span></div>
+        <div class="pad" data-track="1" onclick="triggerPad(1)"><span class="pad-num">2</span><span class="pad-icon">🎯</span><span class="pad-label">SNARE</span></div>
+        <div class="pad" data-track="2" onclick="triggerPad(2)"><span class="pad-num">3</span><span class="pad-icon">🔔</span><span class="pad-label">HIHAT</span></div>
+        <div class="pad" data-track="3" onclick="triggerPad(3)"><span class="pad-num">4</span><span class="pad-icon">📢</span><span class="pad-label">OPEN</span></div>
+        <div class="pad" data-track="4" onclick="triggerPad(4)"><span class="pad-num">5</span><span class="pad-icon">🎵</span><span class="pad-label">TOM</span></div>
+        <div class="pad" data-track="5" onclick="triggerPad(5)"><span class="pad-num">6</span><span class="pad-icon">🎸</span><span class="pad-label">BASS</span></div>
+        <div class="pad" data-track="6" onclick="triggerPad(6)"><span class="pad-num">7</span><span class="pad-icon">👏</span><span class="pad-label">CLAP</span></div>
+        <div class="pad" data-track="7" onclick="triggerPad(7)"><span class="pad-num">8</span><span class="pad-icon">✨</span><span class="pad-label">FX</span></div>
+      </div>
+
+      <!-- 右侧序列器 -->
+      <div class="sequencer-section">
+        <div class="seq-header">
+          <div class="seq-title">16-STEP SEQUENCER</div>
+        </div>
+        <div class="seq-grid" id="seqGrid"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span class="footer-label">BPM:</span>
+      <input type="range" class="bpm-slider" id="bpmSlider" min="60" max="180" value="120">
+      <span class="bpm-range">60-180</span>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-left">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">準備就緒</span>
+      </div>
+      <div id="clock"></div>
+    </div>
+  </div>
+
+  <script>
+    // ─── 配置 ───
+    const TRACKS = [
+      { name: 'KICK', icon: '🥁' },
+      { name: 'SNARE', icon: '🎯' },
+      { name: 'HIHAT', icon: '🔔' },
+      { name: 'OPEN', icon: '📢' },
+      { name: 'TOM', icon: '🎵' },
+      { name: 'BASS', icon: '🎸' },
+      { name: 'CLAP', icon: '👏' },
+      { name: 'FX', icon: '✨' }
+    ];
+
+    // 簡化音頻合成
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // 合成不同音色
+    function playSound(track) {
+      initAudio();
+      if (!audioCtx) return;
+
+      const t = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      switch(track) {
+        case 0: // KICK
+          osc.frequency.setValueAtTime(150, t);
+          osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.5);
+          gain.gain.setValueAtTime(0.8, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+          osc.start(t); osc.stop(t + 0.5);
+          break;
+        case 1: // SNARE
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(200, t);
+          gain.gain.setValueAtTime(0.5, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+          osc.start(t); osc.stop(t + 0.2);
+          break;
+        case 2: // HIHAT
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(800, t);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+          osc.start(t); osc.stop(t + 0.1);
+          break;
+        case 3: // OPEN
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(600, t);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+          osc.start(t); osc.stop(t + 0.3);
+          break;
+        case 4: // TOM
+          osc.frequency.setValueAtTime(180, t);
+          osc.frequency.exponentialRampToValueAtTime(100, t + 0.3);
+          gain.gain.setValueAtTime(0.6, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+          osc.start(t); osc.stop(t + 0.3);
+          break;
+        case 5: // BASS
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(80, t);
+          gain.gain.setValueAtTime(0.5, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+          osc.start(t); osc.stop(t + 0.4);
+          break;
+        case 6: // CLAP
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(400, t);
+          gain.gain.setValueAtTime(0.4, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+          osc.start(t); osc.stop(t + 0.15);
+          break;
+        case 7: // FX
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1200, t);
+          osc.frequency.exponentialRampToValueAtTime(600, t + 0.2);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+          osc.start(t); osc.stop(t + 0.2);
+          break;
+      }
+    }
+
+    // ─── 狀態 ───
+    let grid = Array(8).fill(null).map(() => Array(16).fill(false));
+    let isPlaying = false;
+    let currentStep = 0;
+    let bpm = 120;
+    let intervalId = null;
+
+    // ─── 初始化 ───
+    function initGrid() {
+      const container = document.getElementById('seqGrid');
+      container.innerHTML = '';
+
+      TRACKS.forEach((track, i) => {
+        const row = document.createElement('div');
+        row.className = 'seq-row';
+        row.innerHTML = `
+          <div class="row-label">
+            <span class="row-icon">${track.icon}</span>
+            ${track.name}
+          </div>
+          <div class="steps" id="row${i}"></div>
+        `;
+        container.appendChild(row);
+
+        const stepsContainer = row.querySelector(`#row${i}`);
+        for (let j = 0; j < 16; j++) {
+          const step = document.createElement('div');
+          step.className = 'step';
+          step.dataset.track = i;
+          step.dataset.step = j;
+          step.onclick = () => toggleStep(i, j);
+          stepsContainer.appendChild(step);
+        }
+      });
+    }
+
+    function toggleStep(track, step) {
+      grid[track][step] = !grid[track][step];
+      const el = document.querySelector(`.step[data-track="${track}"][data-step="${step}"]`);
+      el.classList.toggle('active', grid[track][step]);
+    }
+
+    function triggerPad(track) {
+      playSound(track);
+      const pad = document.querySelector(`.pad[data-track="${track}"]`);
+      pad.classList.add('active');
+      setTimeout(() => pad.classList.remove('active'), 150);
+    }
+
+    // ─── 播放控制 ───
+    function play() {
+      if (isPlaying) return;
+      initAudio();
+      isPlaying = true;
+      currentStep = 0;
+      document.getElementById('playBtn').textContent = '⏸ 暫停';
+      document.getElementById('playBtn').classList.add('playing');
+      document.getElementById('statusDot').classList.add('playing');
+      document.getElementById('statusText').textContent = '播放中...';
+
+      intervalId = setInterval(() => {
+        // 更新當前步指示
+        document.querySelectorAll('.step.current').forEach(el => el.classList.remove('current'));
+        document.querySelectorAll(`.step[data-step="${currentStep}"]`).forEach(el => el.classList.add('current'));
+
+        // 播放當前步的音符
+        for (let track = 0; track < 8; track++) {
+          if (grid[track][currentStep]) {
+            triggerPad(track);
+          }
+        }
+
+        currentStep = (currentStep + 1) % 16;
+      }, (60 / bpm) * 1000 / 4); // 16 分音符
+    }
+
+    function pause() {
+      if (!isPlaying) return;
+      isPlaying = false;
+      clearInterval(intervalId);
+      document.getElementById('playBtn').textContent = '▶ 播放';
+      document.getElementById('playBtn').classList.remove('playing');
+      document.getElementById('statusDot').classList.remove('playing');
+      document.getElementById('statusText').textContent = '已暫停';
+      document.querySelectorAll('.step.current').forEach(el => el.classList.remove('current'));
+    }
+
+    function togglePlay() {
+      if (isPlaying) pause(); else play();
+    }
+
+    function clearGrid() {
+      grid = Array(8).fill(null).map(() => Array(16).fill(false));
+      document.querySelectorAll('.step.active').forEach(el => el.classList.remove('active'));
+      pause();
+      document.getElementById('statusText').textContent = '已清空';
+    }
+
+    // ─── BPM 控制 ───
+    document.getElementById('bpmSlider').addEventListener('input', e => {
+      bpm = parseInt(e.target.value);
+      document.getElementById('bpmValue').textContent = bpm;
+      if (isPlaying) {
+        pause();
+        play();
+      }
+    });
+
+    // ─── 清空 ───
+    document.getElementById('clearBtn').addEventListener('click', clearGrid);
+    document.getElementById('playBtn').addEventListener('click', togglePlay);
+
+    // ─── 時鐘 ───
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ─── 鍵盤快捷鍵 ───
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+      else if (e.key >= '1' && e.key <= '8') { triggerPad(parseInt(e.key) - 1); }
+    });
+
+    // 啟動
+    initGrid();
+  </script>
+</body>
+</html>

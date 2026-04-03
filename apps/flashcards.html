@@ -1,716 +1,249 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📖 单词卡片</title>
+  <meta name="viewport" content="width=800, height=480">
+  <title>📖 單詞卡片 - Echo</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #f5f7fa;
-      width: 800px;
-      height: 480px;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 800px; height: 480px; overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
     }
+    .container { width: 100%; height: 100%; padding: 16px 20px; display: flex; flex-direction: column; }
 
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      height: 100%;
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 顶部标题栏 */
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #e8eaed;
-      margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 15px; margin-bottom: 12px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
     }
-
-    /* 返回按钮 */
-    .back-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: #f0f0f0;
-      border: none;
-      border-radius: 8px;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-decoration: none;
+    .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s; margin-right: 6px;
     }
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
+    .header-stats { display: flex; gap: 15px; font-size: 13px; }
+    .stat-item { display: flex; align-items: center; gap: 5px; }
+    .stat-value { font-weight: 700; color: #4ade80; }
 
-    .back-btn:hover {
-      background: #e0e0e0;
-      color: #f5576c;
-    }
+    .main { flex: 1; display: flex; align-items: center; gap: 25px; padding: 0 10px; }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-icon {
-      font-size: 24px;
-    }
-
-    .header-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .header-stats {
-      display: flex;
-      gap: 20px;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .stat-value {
-      font-weight: 600;
-      color: #f5576c;
-    }
-
-    /* 主内容区 */
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 30px;
-      padding-left: 40px;
-    }
-
-    /* 卡片区域 */
-    .card-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-
-    /* 卡片容器 */
-    .card-container {
-      position: relative;
-      width: 380px;
-      height: 240px;
-      perspective: 1000px;
-    }
-
+    /* 卡片 */
+    .card-area { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .card-container { position: relative; width: 360px; height: 230px; perspective: 1000px; }
     .card {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.6s;
-      cursor: pointer;
+      width: 100%; height: 100%; position: relative;
+      transform-style: preserve-3d; transition: transform 0.6s; cursor: pointer;
     }
-
-    .card.flipped {
-      transform: rotateY(180deg);
-    }
-
+    .card.flipped { transform: rotateY(180deg); }
     .card-face {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      backface-visibility: hidden;
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 30px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+      border-radius: 14px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; padding: 25px;
     }
-
     .card-front {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.25);
     }
-
     .card-back {
-      background: white;
-      color: #333;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.3);
       transform: rotateY(180deg);
-      border: 2px solid #e8eaed;
     }
-
-    .word-text {
-      font-size: 36px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .word-phonetic {
-      font-size: 16px;
-      opacity: 0.9;
-      font-family: 'Courier New', monospace;
-    }
-
-    /* 发音按钮 */
+    .word-text { font-size: 36px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .word-phonetic { font-size: 15px; color: rgba(255,255,255,0.7); font-family: 'Courier New', monospace; }
     .speak-btn {
-      width: 40px;
-      height: 40px;
-      border: none;
-      background: rgba(255,255,255,0.3);
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: all 0.3s;
-      color: white;
+      width: 38px; height: 38px; border: none;
+      background: rgba(255,255,255,0.2); border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; transition: all 0.2s; color: #fff;
     }
+    .speak-btn:hover { background: rgba(255,255,255,0.35); transform: scale(1.1); }
+    .word-meaning { font-size: 26px; font-weight: 600; margin-bottom: 8px; }
+    .word-example { font-size: 14px; color: rgba(255,255,255,0.7); text-align: center; line-height: 1.6; }
+    .flip-hint { position: absolute; bottom: 14px; font-size: 12px; color: rgba(255,255,255,0.5); }
 
-    .speak-btn:hover {
-      background: rgba(255,255,255,0.5);
-      transform: scale(1.1);
+    .progress-bar { width: 360px; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #4ade80, #a855f7); border-radius: 3px; transition: width 0.3s; }
+    .progress-text { font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 5px; }
+
+    /* 右侧 */
+    .right-panel { display: flex; flex-direction: column; gap: 10px; }
+    .rate-btns { display: flex; flex-direction: column; gap: 8px; }
+    .rate-btn {
+      padding: 12px 30px; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; min-width: 130px;
     }
+    .rate-btn:hover { transform: translateY(-1px); }
+    .btn-hard { background: rgba(248,113,113,0.25); color: #fca5a5; border: 1px solid rgba(248,113,113,0.35); }
+    .btn-hard:hover { background: rgba(248,113,113,0.35); }
+    .btn-good { background: rgba(251,191,36,0.25); color: #fcd34d; border: 1px solid rgba(251,191,36,0.35); }
+    .btn-good:hover { background: rgba(251,191,36,0.35); }
+    .btn-easy { background: rgba(74,222,128,0.25); color: #86efac; border: 1px solid rgba(74,222,128,0.35); }
+    .btn-easy:hover { background: rgba(74,222,128,0.35); }
+    .btn-next { background: rgba(168,85,247,0.35); color: #e9d5ff; border: 1px solid rgba(168,85,247,0.45); }
+    .btn-next:hover { background: rgba(168,85,247,0.5); }
 
-    .speak-btn:active {
-      transform: scale(0.95);
-    }
-
-    .speak-btn.playing {
-      animation: pulse-speaker 1s infinite;
-    }
-
-    @keyframes pulse-speaker {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-    }
-
-    .word-meaning {
-      font-size: 24px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 10px;
-    }
-
-    .word-example {
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-      line-height: 1.6;
-    }
-
-    .flip-hint {
-      position: absolute;
-      bottom: 15px;
-      font-size: 12px;
-      opacity: 0.7;
-    }
-
-    /* 进度指示 */
-    .progress-bar {
-      width: 380px;
-      height: 6px;
-      background: #e8eaed;
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-      border-radius: 3px;
-      transition: width 0.3s;
-    }
-
-    .progress-text {
-      font-size: 14px;
-      color: #666;
-      margin-top: 8px;
-    }
-
-    /* 右侧控制区 */
-    .right-controls {
-      display: flex;
-      flex-direction: row;
-      gap: 15px;
-      justify-content: center;
-      align-items: flex-start;
-    }
-
-    /* 控制按钮 */
-    .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .control-btn {
-      padding: 16px 40px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-      min-width: 140px;
-    }
-
-    .btn-hard {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .btn-hard:hover {
-      background: #f5c6cb;
-    }
-
-    .btn-good {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .btn-good:hover {
-      background: #ffe69c;
-    }
-
-    .btn-easy {
-      background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 100%);
-      color: white;
-    }
-
-    .btn-easy:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(136, 216, 176, 0.3);
-    }
-
-    .btn-next {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-    }
-
-    .btn-next:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
-    }
-
-    /* 工具按钮区 */
-    .toolbar {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
+    .tool-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
     .tool-btn {
-      padding: 16px 20px;
-      border: 2px solid #e8eaed;
-      background: white;
-      border-radius: 10px;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
-      min-width: 100px;
-      text-align: center;
+      padding: 10px 16px; background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+      color: rgba(255,255,255,0.8); font-size: 13px; cursor: pointer; transition: all 0.2s; text-align: center;
     }
+    .tool-btn:hover { background: rgba(255,255,255,0.2); }
 
-    .tool-btn:hover {
-      border-color: #f5576c;
-      color: #f5576c;
+    .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 15px; margin-top: 12px;
+      background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.6);
     }
-
-    .hidden {
-      display: none !important;
-    }
+    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 顶部标题栏 -->
     <div class="header">
-      <div class="header-left">
-        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
-        <span class="header-icon">📖</span>
-        <span class="header-title">单词卡片</span>
-      </div>
+      <h1>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        📖 單詞卡片
+      </h1>
       <div class="header-stats">
-        <div class="stat-item">
-          <span>今日学习:</span>
-          <span class="stat-value" id="todayCount">0</span>
-        </div>
-        <div class="stat-item">
-          <span>已掌握:</span>
-          <span class="stat-value" id="masteredCount">0</span>
-        </div>
+        <div class="stat-item">今日學習: <span class="stat-value" id="todayCount">0</span></div>
+        <div class="stat-item">已掌握: <span class="stat-value" id="masteredCount">0</span></div>
       </div>
     </div>
 
-    <!-- 主内容区 -->
-    <div class="main-content">
-      <!-- 左侧卡片区域 -->
+    <div class="main">
       <div class="card-area">
-        <!-- 卡片容器 -->
         <div class="card-container">
           <div class="card" id="card">
-            <!-- 正面 -->
             <div class="card-face card-front">
               <div class="word-text">
                 <span id="wordText">Hello</span>
-                <button class="speak-btn" id="speakBtn" title="点击发音">🔊</button>
+                <button class="speak-btn" id="speakBtn" title="點擊發音">🔊</button>
               </div>
               <div class="word-phonetic" id="wordPhonetic">/həˈloʊ/</div>
-              <div class="flip-hint">点击翻转查看释义</div>
+              <div class="flip-hint">點擊翻轉查看釋義</div>
             </div>
-            <!-- 背面 -->
             <div class="card-face card-back">
               <div class="word-meaning" id="wordMeaning">你好</div>
               <div class="word-example" id="wordExample">Hello, how are you?</div>
             </div>
           </div>
         </div>
-
-        <!-- 进度条 -->
-        <div class="progress-section">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
-          </div>
-          <div class="progress-text">
-            <span id="currentIndex">1</span> / <span id="totalCount">10</span>
-          </div>
-        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-text"><span id="currentIndex">1</span> / <span id="totalCount">10</span></div>
       </div>
 
-      <!-- 右侧控制区 -->
-      <div class="right-controls">
-        <div class="controls" id="controls">
-          <button class="control-btn btn-hard" id="btnHard">困难</button>
-          <button class="control-btn btn-good" id="btnGood">一般</button>
-          <button class="control-btn btn-easy" id="btnEasy">简单</button>
+      <div class="right-panel">
+        <div class="rate-btns" id="controls">
+          <button class="rate-btn btn-hard" id="btnHard">😰 困難</button>
+          <button class="rate-btn btn-good" id="btnGood">🤔 一般</button>
+          <button class="rate-btn btn-easy" id="btnEasy">😎 簡單</button>
         </div>
-
-        <div class="controls hidden" id="nextControl">
-          <button class="control-btn btn-next" id="btnNext">下一个 →</button>
+        <div class="rate-btns hidden" id="nextControl">
+          <button class="rate-btn btn-next" id="btnNext">下一個 →</button>
         </div>
-
-        <!-- 工具按钮 -->
-        <div class="toolbar">
-          <button class="tool-btn" id="btnShuffle">🔀 随机</button>
+        <div class="tool-btns">
+          <button class="tool-btn" id="btnShuffle">🔀 隨機</button>
           <button class="tool-btn" id="btnReset">🔄 重置</button>
           <button class="tool-btn" id="btnAdd">➕ 添加</button>
         </div>
       </div>
     </div>
+
+    <div class="footer">
+      <div class="footer-left"><div class="status-dot"></div><span>Echo AI 驅動</span></div>
+      <div id="clock"></div>
+    </div>
   </div>
 
   <script>
-    // 内置词库
     const defaultWords = [
-      { word: 'Hello', phonetic: '/həˈloʊ/', meaning: '你好', example: 'Hello, how are you?' },
-      { word: 'World', phonetic: '/wɜːrld/', meaning: '世界', example: 'The world is beautiful.' },
-      { word: 'Study', phonetic: '/ˈstʌdi/', meaning: '学习', example: 'I study English every day.' },
-      { word: 'Computer', phonetic: '/kəmˈpjuːtər/', meaning: '电脑', example: 'I use a computer for work.' },
-      { word: 'Science', phonetic: '/ˈsaɪəns/', meaning: '科学', example: 'Science helps us understand the world.' },
-      { word: 'Dream', phonetic: '/driːm/', meaning: '梦想', example: 'Never give up on your dreams.' },
-      { word: 'Future', phonetic: '/ˈfjuːtʃər/', meaning: '未来', example: 'The future is full of possibilities.' },
-      { word: 'Knowledge', phonetic: '/ˈnɒlɪdʒ/', meaning: '知识', example: 'Knowledge is power.' },
-      { word: 'Challenge', phonetic: '/ˈtʃælɪndʒ/', meaning: '挑战', example: 'Every challenge is an opportunity.' },
-      { word: 'Success', phonetic: '/səkˈses/', meaning: '成功', example: 'Hard work leads to success.' }
+      { word:'Hello', phonetic:'/həˈloʊ/', meaning:'你好', example:'Hello, how are you?' },
+      { word:'World', phonetic:'/wɜːrld/', meaning:'世界', example:'The world is beautiful.' },
+      { word:'Study', phonetic:'/ˈstʌdi/', meaning:'學習', example:'I study English every day.' },
+      { word:'Computer', phonetic:'/kəmˈpjuːtər/', meaning:'電腦', example:'I use a computer for work.' },
+      { word:'Science', phonetic:'/ˈsaɪəns/', meaning:'科學', example:'Science helps us understand the world.' },
+      { word:'Dream', phonetic:'/driːm/', meaning:'夢想', example:'Never give up on your dreams.' },
+      { word:'Future', phonetic:'/ˈfjuːtʃər/', meaning:'未來', example:'The future is full of possibilities.' },
+      { word:'Knowledge', phonetic:'/ˈnɒlɪdʒ/', meaning:'知識', example:'Knowledge is power.' },
+      { word:'Challenge', phonetic:'/ˈtʃælɪndʒ/', meaning:'挑戰', example:'Every challenge is an opportunity.' },
+      { word:'Success', phonetic:'/səkˈses/', meaning:'成功', example:'Hard work leads to success.' }
     ];
 
-    // 状态变量
-    let words = [...defaultWords];
-    let currentIndex = 0;
-    let isFlipped = false;
-    let todayCount = 0;
-    let masteredCount = 0;
-    let wordStatus = {}; // 记录每个单词的掌握程度
+    let words=[...defaultWords],currentIndex=0,isFlipped=false,todayCount=0,masteredCount=0,wordStatus={};
+    const card=document.getElementById('card'),wordText=document.getElementById('wordText'),
+      wordPhonetic=document.getElementById('wordPhonetic'),wordMeaning=document.getElementById('wordMeaning'),
+      wordExample=document.getElementById('wordExample'),progressFill=document.getElementById('progressFill'),
+      currentIndexEl=document.getElementById('currentIndex'),totalCountEl=document.getElementById('totalCount'),
+      todayCountEl=document.getElementById('todayCount'),masteredCountEl=document.getElementById('masteredCount'),
+      controls=document.getElementById('controls'),nextControl=document.getElementById('nextControl');
 
-    // DOM 元素
-    const card = document.getElementById('card');
-    const wordText = document.getElementById('wordText');
-    const wordPhonetic = document.getElementById('wordPhonetic');
-    const wordMeaning = document.getElementById('wordMeaning');
-    const wordExample = document.getElementById('wordExample');
-    const speakBtn = document.getElementById('speakBtn');
-    const progressFill = document.getElementById('progressFill');
-    const currentIndexEl = document.getElementById('currentIndex');
-    const totalCountEl = document.getElementById('totalCount');
-    const todayCountEl = document.getElementById('todayCount');
-    const masteredCountEl = document.getElementById('masteredCount');
-    const controls = document.getElementById('controls');
-    const nextControl = document.getElementById('nextControl');
-
-    // 初始化
-    function init() {
-      loadStats();
-      shuffleWords();
-      showCard();
-      updateProgress();
+    function showCard(){
+      const w=words[currentIndex];
+      wordText.textContent=w.word;wordPhonetic.textContent=w.phonetic;
+      wordMeaning.textContent=w.meaning;wordExample.textContent=w.example;
+      isFlipped=false;card.classList.remove('flipped');
+      controls.classList.remove('hidden');nextControl.classList.add('hidden');
     }
-
-    // 显示当前卡片
-    function showCard() {
-      const word = words[currentIndex];
-      wordText.textContent = word.word;
-      wordPhonetic.textContent = word.phonetic;
-      wordMeaning.textContent = word.meaning;
-      wordExample.textContent = word.example;
-      
-      // 重置翻转状态
-      isFlipped = false;
-      card.classList.remove('flipped');
-      
-      // 显示评分按钮，隐藏下一个按钮
-      controls.classList.remove('hidden');
-      nextControl.classList.add('hidden');
-      
-      // 停止发音动画
-      speakBtn.classList.remove('playing');
+    function flipCard(){isFlipped=!isFlipped;card.classList.toggle('flipped');}
+    function updateProgress(){
+      progressFill.style.width=((currentIndex+1)/words.length*100)+'%';
+      currentIndexEl.textContent=currentIndex+1;totalCountEl.textContent=words.length;
     }
-
-    // 发音功能
-    function speakWord() {
-      const word = words[currentIndex].word;
-      
-      // 检查浏览器是否支持语音合成
-      if ('speechSynthesis' in window) {
-        // 取消之前的发音
+    function rateWord(d){
+      wordStatus[words[currentIndex].word]=d;todayCount++;
+      if(d==='easy')masteredCount++;
+      todayCountEl.textContent=todayCount;masteredCountEl.textContent=masteredCount;
+      controls.classList.add('hidden');nextControl.classList.remove('hidden');
+    }
+    function nextWord(){
+      currentIndex++;if(currentIndex>=words.length){currentIndex=0;alert('🎉 本輪學習完成！繼續加油～');}
+      showCard();updateProgress();
+    }
+    function shuffleWords(){
+      for(let i=words.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[words[i],words[j]]=[words[j],words[i]];}
+      currentIndex=0;showCard();updateProgress();
+    }
+    function speakWord(){
+      if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(word);
-        utterance.lang = 'en-US'; // 英语
-        utterance.rate = 0.9; // 稍微慢一点
-        utterance.pitch = 1;
-        
-        // 开始发音时添加动画
-        utterance.onstart = () => {
-          speakBtn.classList.add('playing');
-        };
-        
-        // 结束发音时移除动画
-        utterance.onend = () => {
-          speakBtn.classList.remove('playing');
-        };
-        
-        // 错误处理
-        utterance.onerror = () => {
-          speakBtn.classList.remove('playing');
-          console.log('发音失败');
-        };
-        
-        window.speechSynthesis.speak(utterance);
-      } else {
-        alert('您的浏览器不支持语音合成功能');
+        const u=new SpeechSynthesisUtterance(words[currentIndex].word);u.lang='en-US';u.rate=0.9;
+        window.speechSynthesis.speak(u);
       }
     }
 
-    // 播放音效
-    function playSound(type) {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        if (type === 'flip') {
-          // 翻牌：柔和的"唰"声
-          oscillator.frequency.value = 400;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.15);
-        } else if (type === 'rate') {
-          // 评分：清脆的"叮"
-          oscillator.frequency.value = 800;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.1);
-        } else if (type === 'next') {
-          // 下一个：轻快的"嗒"
-          oscillator.frequency.value = 600;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.08);
-        }
-      } catch (e) {}
-    }
-
-    // 翻转卡片
-    function flipCard() {
-      isFlipped = !isFlipped;
-      card.classList.toggle('flipped');
-      playSound('flip');
-    }
-
-    // 更新进度
-    function updateProgress() {
-      const progress = ((currentIndex + 1) / words.length) * 100;
-      progressFill.style.width = progress + '%';
-      currentIndexEl.textContent = currentIndex + 1;
-      totalCountEl.textContent = words.length;
-    }
-
-    // 评分
-    function rateWord(difficulty) {
-      playSound('rate');
-      const word = words[currentIndex];
-      wordStatus[word.word] = difficulty;
-      
-      todayCount++;
-      if (difficulty === 'easy') {
-        masteredCount++;
-      }
-      
-      saveStats();
-      updateStatsDisplay();
-      
-      // 显示下一个按钮
-      controls.classList.add('hidden');
-      nextControl.classList.remove('hidden');
-    }
-
-    // 下一个单词
-    function nextWord() {
-      playSound('next');
-      currentIndex++;
-      if (currentIndex >= words.length) {
-        currentIndex = 0;
-        alert('🎉 本轮学习完成！继续加油～');
-      }
-      showCard();
-      updateProgress();
-    }
-
-    // 随机打乱
-    function shuffleWords() {
-      for (let i = words.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [words[i], words[j]] = [words[j], words[i]];
-      }
-      currentIndex = 0;
-      showCard();
-      updateProgress();
-    }
-
-    // 重置进度
-    function resetProgress() {
-      currentIndex = 0;
-      wordStatus = {};
-      showCard();
-      updateProgress();
-    }
-
-    // 添加单词
-    function addWord() {
-      const word = prompt('请输入单词:');
-      if (!word) return;
-      
-      const phonetic = prompt('请输入音标 (可选):') || '';
-      const meaning = prompt('请输入释义:');
-      if (!meaning) return;
-      
-      const example = prompt('请输入例句 (可选):') || '';
-      
-      words.push({ word, phonetic, meaning, example });
-      totalCountEl.textContent = words.length;
-      alert('✅ 单词添加成功！');
-    }
-
-    // 保存统计
-    function saveStats() {
-      localStorage.setItem('flashcard_todayCount', todayCount);
-      localStorage.setItem('flashcard_masteredCount', masteredCount);
-      localStorage.setItem('flashcard_wordStatus', JSON.stringify(wordStatus));
-    }
-
-    // 加载统计
-    function loadStats() {
-      todayCount = parseInt(localStorage.getItem('flashcard_todayCount')) || 0;
-      masteredCount = parseInt(localStorage.getItem('flashcard_masteredCount')) || 0;
-      wordStatus = JSON.parse(localStorage.getItem('flashcard_wordStatus')) || {};
-      updateStatsDisplay();
-    }
-
-    // 更新统计显示
-    function updateStatsDisplay() {
-      todayCountEl.textContent = todayCount;
-      masteredCountEl.textContent = masteredCount;
-    }
-
-    // 事件监听
-    card.addEventListener('click', (e) => {
-      // 如果点击的是发音按钮，不翻转卡片
-      if (e.target.id === 'speakBtn') {
-        return;
-      }
-      flipCard();
+    card.addEventListener('click',e=>{if(e.target.id!=='speakBtn')flipCard();});
+    document.getElementById('speakBtn').addEventListener('click',e=>{e.stopPropagation();speakWord();});
+    document.getElementById('btnHard').addEventListener('click',()=>rateWord('hard'));
+    document.getElementById('btnGood').addEventListener('click',()=>rateWord('good'));
+    document.getElementById('btnEasy').addEventListener('click',()=>rateWord('easy'));
+    document.getElementById('btnNext').addEventListener('click',nextWord);
+    document.getElementById('btnShuffle').addEventListener('click',shuffleWords);
+    document.getElementById('btnReset').addEventListener('click',()=>{currentIndex=0;wordStatus={};showCard();updateProgress();});
+    document.getElementById('btnAdd').addEventListener('click',()=>{
+      const w=prompt('請輸入單詞:');if(!w)return;
+      const p=prompt('音標 (可選):')||'';const m=prompt('釋義:');if(!m)return;
+      const ex=prompt('例句 (可選):')||'';
+      words.push({word:w,phonetic:p,meaning:m,example:ex});totalCountEl.textContent=words.length;
     });
-    
-    speakBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // 阻止冒泡，避免触发卡片翻转
-      speakWord();
-    });
-    
-    document.getElementById('btnHard').addEventListener('click', () => rateWord('hard'));
-    document.getElementById('btnGood').addEventListener('click', () => rateWord('good'));
-    document.getElementById('btnEasy').addEventListener('click', () => rateWord('easy'));
-    document.getElementById('btnNext').addEventListener('click', nextWord);
-    document.getElementById('btnShuffle').addEventListener('click', shuffleWords);
-    document.getElementById('btnReset').addEventListener('click', resetProgress);
-    document.getElementById('btnAdd').addEventListener('click', addWord);
-
-    // 键盘支持
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        flipCard();
-      } else if (e.code === 'ArrowRight') {
-        nextWord();
-      } else if (e.code === 'KeyH') {
-        rateWord('hard');
-      } else if (e.code === 'KeyG') {
-        rateWord('good');
-      } else if (e.code === 'KeyE') {
-        rateWord('easy');
-      }
+    document.addEventListener('keydown',e=>{
+      if(e.code==='Space'){e.preventDefault();flipCard();}
+      else if(e.code==='ArrowRight')nextWord();
     });
 
-    // 启动
-    init();
+    function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});}
+    shuffleWords();updateClock();setInterval(updateClock,1000);
   </script>
 </body>
 </html>
