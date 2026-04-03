@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, height=480">
+  <title>作息時間表 - Echo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      width: 800px;
+      height: 480px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
+    }
+
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 15px;
+      margin-bottom: 12px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .home-btn {
+      color: #fff;
+      text-decoration: none;
+      font-size: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.15);
+      transition: background 0.2s;
+      margin-right: 6px;
+    }
+
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .today-date {
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .streak-badge {
+      background: rgba(74,222,128,0.25);
+      border: 1px solid rgba(74,222,128,0.4);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    /* 主内容 */
+    .main {
+      flex: 1;
+      display: flex;
+      gap: 14px;
+      overflow: hidden;
+    }
+
+    /* 左侧 - 时间轴 + 打卡 */
+    .schedule-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 打卡卡片行 */
+    .checkin-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .checkin-card {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .checkin-card:hover { background: rgba(255,255,255,0.15); }
+
+    .checkin-card.checked {
+      border-color: rgba(74,222,128,0.4);
+    }
+
+    .checkin-card.checked::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(74,222,128,0.08), rgba(74,222,128,0.02));
+      pointer-events: none;
+    }
+
+    .checkin-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .icon-wake { background: rgba(251,191,36,0.25); }
+    .icon-study { background: rgba(96,165,250,0.25); }
+    .icon-sleep { background: rgba(168,85,247,0.25); }
+
+    .checkin-info { flex: 1; }
+
+    .checkin-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .checkin-time {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .checkin-time-set {
+      font-size: 18px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .checkin-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .checkin-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .checkin-btn.done {
+      background: rgba(74,222,128,0.25);
+      border-color: rgba(74,222,128,0.4);
+      color: #4ade80;
+    }
+
+    /* 时间轴 */
+    .timeline-card {
+      flex: 1;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* 进度条 */
+    .day-progress {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .day-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #a855f7);
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+
+    /* 时间轴列表 */
+    .timeline-list {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .timeline-list::-webkit-scrollbar { width: 4px; }
+    .timeline-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 0;
+      position: relative;
+    }
+
+    .timeline-dot-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 20px;
+      flex-shrink: 0;
+    }
+
+    .timeline-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      border: 2px solid rgba(255,255,255,0.4);
+      flex-shrink: 0;
+      z-index: 1;
+    }
+
+    .timeline-dot.active {
+      background: #4ade80;
+      border-color: #4ade80;
+      box-shadow: 0 0 8px rgba(74,222,128,0.5);
+    }
+
+    .timeline-dot.current {
+      background: #fbbf24;
+      border-color: #fbbf24;
+      animation: dotPulse 1.5s infinite;
+    }
+
+    @keyframes dotPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.4); }
+      50% { box-shadow: 0 0 0 5px rgba(251,191,36,0); }
+    }
+
+    .timeline-line {
+      width: 2px;
+      flex: 1;
+      background: rgba(255,255,255,0.15);
+      min-height: 20px;
+    }
+
+    .timeline-content {
+      flex: 1;
+      padding-bottom: 8px;
+    }
+
+    .timeline-content-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .timeline-content-time {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* 右侧面板 */
+    .side-panel {
+      width: 230px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 14px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 设定编辑 */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-label {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .setting-input {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 4px 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      width: 70px;
+      text-align: center;
+      outline: none;
+    }
+
+    .setting-input:focus { border-color: rgba(255,255,255,0.4); }
+
+    /* 本周统计 */
+    .week-grid {
+      display: flex;
+      gap: 4px;
+      justify-content: space-between;
+    }
+
+    .week-day {
+      flex: 1;
+      text-align: center;
+    }
+
+    .week-label {
+      font-size: 10px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 4px;
+    }
+
+    .week-dots {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .week-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.1);
+      font-size: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .week-dot.done { background: rgba(74,222,128,0.4); }
+    .week-dot.missed { background: rgba(248,113,113,0.3); }
+    .week-dot.today { border: 1px solid rgba(251,191,36,0.6); }
+
+    /* 睡眠统计 */
+    .sleep-stat {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+    }
+
+    .sleep-stat-item {}
+
+    .sleep-stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+
+    .sleep-stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+    }
+
+    .sleep-bar {
+      margin-top: 10px;
+      height: 20px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      position: relative;
+    }
+
+    .sleep-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      transition: width 0.5s;
+    }
+
+    .bar-sleep { background: rgba(168,85,247,0.4); }
+    .bar-awake { background: rgba(251,191,36,0.3); }
+
+    /* 底部 */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 15px;
+      margin-top: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部 -->
+    <div class="header">
+      <h1>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        🌙 作息時間表
+      </h1>
+      <div class="header-right">
+        <span class="today-date" id="todayDate"></span>
+        <span class="streak-badge" id="streakBadge">🔥 連續 0 天</span>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- 左侧 -->
+      <div class="schedule-panel">
+        <!-- 打卡卡片 -->
+        <div class="checkin-row">
+          <div class="checkin-card" id="cardWake" onclick="checkin('wake')">
+            <div class="checkin-icon icon-wake">🌅</div>
+            <div class="checkin-info">
+              <div class="checkin-label">起床打卡</div>
+              <div class="checkin-time" id="wakeStatus">目標 <span class="checkin-time-set" id="wakeTarget">07:00</span></div>
+            </div>
+            <button class="checkin-btn" id="wakeBtn">打卡</button>
+          </div>
+
+          <div class="checkin-card" id="cardStudy" onclick="checkin('study')">
+            <div class="checkin-icon icon-study">📖</div>
+            <div class="checkin-info">
+              <div class="checkin-label">學習打卡</div>
+              <div class="checkin-time" id="studyStatus">目標 <span class="checkin-time-set" id="studyTarget">09:00</span></div>
+            </div>
+            <button class="checkin-btn" id="studyBtn">打卡</button>
+          </div>
+
+          <div class="checkin-card" id="cardSleep" onclick="checkin('sleep')">
+            <div class="checkin-icon icon-sleep">🌙</div>
+            <div class="checkin-info">
+              <div class="checkin-label">就寢打卡</div>
+              <div class="checkin-time" id="sleepStatus">目標 <span class="checkin-time-set" id="sleepTarget">23:00</span></div>
+            </div>
+            <button class="checkin-btn" id="sleepBtn">打卡</button>
+          </div>
+        </div>
+
+        <!-- 今日时间轴 -->
+        <div class="timeline-card">
+          <div class="timeline-header">
+            <div class="timeline-title">📅 今日時間軸</div>
+            <span class="progress-text" id="progressText">已過 0%</span>
+          </div>
+          <div class="day-progress">
+            <div class="day-progress-fill" id="dayProgressFill" style="width:0%"></div>
+          </div>
+          <div class="timeline-list" id="timelineList"></div>
+        </div>
+      </div>
+
+      <!-- 右侧面板 -->
+      <div class="side-panel">
+        <!-- 时间设定 -->
+        <div class="card">
+          <div class="card-title">⚙️ 作息設定</div>
+          <div class="setting-row">
+            <span class="setting-label">🌅 起床</span>
+            <input type="time" class="setting-input" id="setWake" value="07:00" onchange="updateSettings()">
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">📖 學習</span>
+            <input type="time" class="setting-input" id="setStudy" value="09:00" onchange="updateSettings()">
+          </div>
+          <div class="setting-row">
+            <span class="setting-label">🌙 就寢</span>
+            <input type="time" class="setting-input" id="setSleep" value="23:00" onchange="updateSettings()">
+          </div>
+        </div>
+
+        <!-- 本周打卡 -->
+        <div class="card">
+          <div class="card-title">📊 本週打卡</div>
+          <div class="week-grid" id="weekGrid"></div>
+        </div>
+
+        <!-- 睡眠统计 -->
+        <div class="card">
+          <div class="card-title">😴 睡眠統計</div>
+          <div class="sleep-stat">
+            <div class="sleep-stat-item">
+              <div class="sleep-stat-value" id="sleepHours">8.0</div>
+              <div class="sleep-stat-label">平均睡眠(h)</div>
+            </div>
+            <div class="sleep-stat-item">
+              <div class="sleep-stat-value" id="sleepScore">85</div>
+              <div class="sleep-stat-label">睡眠評分</div>
+            </div>
+          </div>
+          <div class="sleep-bar">
+            <div class="sleep-bar-fill bar-sleep" id="barSleep" style="width:33%">睡眠</div>
+            <div class="sleep-bar-fill bar-awake" id="barAwake" style="width:67%">清醒</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="footer">
+      <div class="footer-left">
+        <div class="status-dot"></div>
+        <span>Echo AI 驅動</span>
+      </div>
+      <div id="clock"></div>
+    </div>
+  </div>
+
+  <script>
+    // ─── 数据 ───
+    const STORAGE_KEY = 'echo_routine';
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      return getDefault();
+    }
+
+    function getDefault() {
+      return {
+        settings: { wake: '07:00', study: '09:00', sleep: '23:00' },
+        records: {},  // { '2026-04-03': { wake: '07:05', study: '09:12', sleep: null } }
+        streak: 0
+      };
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    let data = loadData();
+
+    function todayKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function todayRecord() {
+      const key = todayKey();
+      if (!data.records[key]) data.records[key] = {};
+      return data.records[key];
+    }
+
+    // ─── 打卡 ───
+    function checkin(type) {
+      const rec = todayRecord();
+      if (rec[type]) return; // 已打卡
+      const now = new Date();
+      rec[type] = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      updateStreak();
+      saveData();
+      render();
+    }
+
+    function updateStreak() {
+      let streak = 0;
+      const d = new Date();
+      for (let i = 0; i < 365; i++) {
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const rec = data.records[key];
+        if (rec && rec.wake && rec.study && rec.sleep) {
+          streak++;
+        } else if (i > 0) {
+          break;
+        } else {
+          // 今天还没全打完，看昨天
+        }
+        d.setDate(d.getDate() - 1);
+      }
+      data.streak = streak;
+    }
+
+    // ─── 设定 ───
+    function updateSettings() {
+      data.settings.wake = document.getElementById('setWake').value;
+      data.settings.study = document.getElementById('setStudy').value;
+      data.settings.sleep = document.getElementById('setSleep').value;
+      saveData();
+      render();
+    }
+
+    // ─── 时间轴 ───
+    function buildTimeline() {
+      const s = data.settings;
+      const rec = todayRecord();
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      function toMin(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+
+      const items = [
+        { time: s.wake, label: '🌅 起床', emoji: '🌅', checked: !!rec.wake, actual: rec.wake },
+        { time: addMin(s.wake, 30), label: '🍳 早餐', emoji: '🍳', checked: nowMin > toMin(addMin(s.wake, 30)) },
+        { time: s.study, label: '📖 開始學習', emoji: '📖', checked: !!rec.study, actual: rec.study },
+        { time: addMin(s.study, 120), label: '☕ 休息', emoji: '☕', checked: nowMin > toMin(addMin(s.study, 120)) },
+        { time: '12:00', label: '🍱 午餐', emoji: '🍱', checked: nowMin > 720 },
+        { time: '13:00', label: '😴 午休', emoji: '😴', checked: nowMin > 780 },
+        { time: '14:00', label: '📖 下午學習', emoji: '📖', checked: nowMin > 840 },
+        { time: '17:00', label: '🏃 運動時間', emoji: '🏃', checked: nowMin > 1020 },
+        { time: '18:30', label: '🍽 晚餐', emoji: '🍽', checked: nowMin > 1110 },
+        { time: '20:00', label: '📚 自由學習', emoji: '📚', checked: nowMin > 1200 },
+        { time: addMin(s.sleep, -30), label: '🧘 放鬆', emoji: '🧘', checked: nowMin > toMin(addMin(s.sleep, -30)) },
+        { time: s.sleep, label: '🌙 就寢', emoji: '🌙', checked: !!rec.sleep, actual: rec.sleep }
+      ];
+
+      // sort by time
+      items.sort((a,b) => toMin(a.time) - toMin(b.time));
+
+      // find current
+      let currentIdx = -1;
+      for (let i = items.length - 1; i >= 0; i--) {
+        if (nowMin >= toMin(items[i].time)) {
+          currentIdx = i;
+          break;
+        }
+      }
+
+      const el = document.getElementById('timelineList');
+      el.innerHTML = items.map((item, i) => {
+        const dotClass = item.checked ? 'active' : (i === currentIdx ? 'current' : '');
+        const actualText = item.actual ? ` · 實際 ${item.actual}` : '';
+        return `<div class="timeline-item">
+          <div class="timeline-dot-col">
+            <div class="timeline-dot ${dotClass}"></div>
+            ${i < items.length - 1 ? '<div class="timeline-line"></div>' : ''}
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-content-title">${item.label}</div>
+            <div class="timeline-content-time">${item.time}${actualText}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function addMin(timeStr, mins) {
+      let [h, m] = timeStr.split(':').map(Number);
+      let total = h * 60 + m + mins;
+      if (total < 0) total += 1440;
+      if (total >= 1440) total -= 1440;
+      return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
+    }
+
+    // ─── 本周打卡 ───
+    function renderWeek() {
+      const el = document.getElementById('weekGrid');
+      const days = ['一','二','三','四','五','六','日'];
+      const now = new Date();
+      const dayOfWeek = (now.getDay() + 6) % 7; // 周一=0
+
+      let html = '';
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - dayOfWeek + i);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const rec = data.records[key] || {};
+        const isToday = key === todayKey();
+        const isFuture = d > now && !isToday;
+
+        const wCls = rec.wake ? 'done' : (isFuture ? '' : (isToday ? 'today' : 'missed'));
+        const sCls = rec.study ? 'done' : (isFuture ? '' : (isToday ? 'today' : 'missed'));
+        const slCls = rec.sleep ? 'done' : (isFuture ? '' : (isToday ? 'today' : 'missed'));
+
+        html += `<div class="week-day">
+          <div class="week-label">${days[i]}</div>
+          <div class="week-dots">
+            <div class="week-dot ${wCls}" title="起床">🌅</div>
+            <div class="week-dot ${sCls}" title="學習">📖</div>
+            <div class="week-dot ${slCls}" title="就寢">🌙</div>
+          </div>
+        </div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    // ─── 日进度 ───
+    function updateDayProgress() {
+      const now = new Date();
+      const wakeMin = timeToMin(data.settings.wake);
+      const sleepMin = timeToMin(data.settings.sleep);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      let pct = 0;
+      if (nowMin <= wakeMin) pct = 0;
+      else if (nowMin >= sleepMin) pct = 100;
+      else pct = Math.round((nowMin - wakeMin) / (sleepMin - wakeMin) * 100);
+
+      document.getElementById('dayProgressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = `已過 ${pct}%`;
+    }
+
+    function timeToMin(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+
+    // ─── 睡眠统计 ───
+    function updateSleepStats() {
+      const wakeMin = timeToMin(data.settings.wake);
+      const sleepMin = timeToMin(data.settings.sleep);
+      const sleepHours = (24 * 60 - sleepMin + wakeMin) / 60;
+      const awakePct = Math.round((sleepMin - wakeMin) / 1440 * 100);
+      const sleepPct = 100 - awakePct;
+
+      document.getElementById('sleepHours').textContent = sleepHours.toFixed(1);
+      document.getElementById('sleepScore').textContent = Math.min(100, Math.round(sleepHours / 8 * 85 + (sleepHours >= 7 && sleepHours <= 9 ? 15 : 0)));
+      document.getElementById('barSleep').style.width = sleepPct + '%';
+      document.getElementById('barAwake').style.width = awakePct + '%';
+    }
+
+    // ─── 渲染 ───
+    function render() {
+      const s = data.settings;
+      const rec = todayRecord();
+
+      // 设定
+      document.getElementById('setWake').value = s.wake;
+      document.getElementById('setStudy').value = s.study;
+      document.getElementById('setSleep').value = s.sleep;
+
+      // 目标显示
+      document.getElementById('wakeTarget').textContent = s.wake;
+      document.getElementById('studyTarget').textContent = s.study;
+      document.getElementById('sleepTarget').textContent = s.sleep;
+
+      // 打卡状态
+      ['wake','study','sleep'].forEach(type => {
+        const card = document.getElementById('card' + type.charAt(0).toUpperCase() + type.slice(1));
+        const btn = document.getElementById(type + 'Btn');
+        const status = document.getElementById(type + 'Status');
+
+        if (rec[type]) {
+          card.classList.add('checked');
+          btn.textContent = '✓ ' + rec[type];
+          btn.classList.add('done');
+          const target = s[type];
+          const diff = timeToMin(rec[type]) - timeToMin(target);
+          if (type === 'sleep') {
+            status.innerHTML = diff <= 0 ? `<span style="color:#4ade80">準時就寢 ✨</span>` : `<span style="color:#fbbf24">晚了 ${diff} 分鐘</span>`;
+          } else {
+            status.innerHTML = diff <= 0 ? `<span style="color:#4ade80">準時完成 ✨</span>` : `<span style="color:#fbbf24">遲了 ${diff} 分鐘</span>`;
+          }
+        } else {
+          card.classList.remove('checked');
+          btn.textContent = '打卡';
+          btn.classList.remove('done');
+        }
+      });
+
+      // 连续
+      document.getElementById('streakBadge').textContent = `🔥 連續 ${data.streak} 天`;
+
+      // 日期
+      const now = new Date();
+      document.getElementById('todayDate').textContent = now.toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'short' });
+
+      buildTimeline();
+      renderWeek();
+      updateDayProgress();
+      updateSleepStats();
+    }
+
+    // ─── 时钟 ───
+    function updateClock() {
+      const now = new Date();
+      const t = now.toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
+      const d = now.toLocaleDateString('zh-TW', { month:'short', day:'numeric', weekday:'short' });
+      document.getElementById('clock').textContent = `${d} ${t}`;
+    }
+
+    // ─── 初始化 ───
+    render();
+    updateClock();
+    setInterval(updateClock, 1000);
+    setInterval(() => { updateDayProgress(); buildTimeline(); }, 60000);
+  </script>
+</body>
+</html>

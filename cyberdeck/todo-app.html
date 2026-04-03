@@ -385,6 +385,7 @@
     <!-- 顶部导航 -->
     <div class="header">
       <h1>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" style="color:#fff;text-decoration:none;font-size:20px;margin-right:6px;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.15);transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'" title="返回桌面">🏠</a>
         <span class="header-icon">✓</span>
         智能待办清单
       </h1>
@@ -437,10 +438,12 @@
 
         <div class="suggestions">
           <div class="suggestion-title">💡 智能建議</div>
-          <div class="suggestion-item" onclick="addSuggestion('完成项目报告')">📄 完成项目报告</div>
-          <div class="suggestion-item" onclick="addSuggestion('回复重要邮件')">📧 回复重要邮件</div>
-          <div class="suggestion-item" onclick="addSuggestion('团队周会准备')">👥 团队周会准备</div>
-          <div class="suggestion-item" onclick="addSuggestion('代码审查')">💻 代码审查</div>
+          <div class="suggestion-item" onclick="addSuggestion('完成數學作業')">📐 完成數學作業</div>
+          <div class="suggestion-item" onclick="addSuggestion('背英語單詞 30 個')">🔤 背英語單詞 30 個</div>
+          <div class="suggestion-item" onclick="addSuggestion('複習明天考試科目')">📝 複習明天考試科目</div>
+          <div class="suggestion-item" onclick="addSuggestion('閱讀課外書 30 分鐘')">📚 閱讀課外書 30 分鐘</div>
+          <div class="suggestion-item" onclick="addSuggestion('整理錯題本')">✏️ 整理錯題本</div>
+          <div class="suggestion-item" onclick="addSuggestion('運動鍛煉 30 分鐘')">🏃 運動鍛煉 30 分鐘</div>
         </div>
       </div>
     </div>
@@ -458,9 +461,9 @@
   <script>
     // 待办数据
     let todos = [
-      { id: 1, text: '完成季度報告', completed: false, priority: 'high' },
-      { id: 2, text: '回复客戶郵件', completed: false, priority: 'medium' },
-      { id: 3, text: '更新项目文檔', completed: false, priority: 'low' }
+      { id: 1, text: '完成數學作業', completed: false, priority: 'high' },
+      { id: 2, text: '背英語單詞', completed: false, priority: 'medium' },
+      { id: 3, text: '預習明天課程', completed: false, priority: 'low' }
     ];
 
     // 优先级标签映射
