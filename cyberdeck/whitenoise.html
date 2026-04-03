@@ -12,55 +12,60 @@
       background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
       color: #fff;
     }
-    .container { width: 100%; height: 100%; padding: 14px 18px; display: flex; flex-direction: column; }
+    .container { width: 100%; height: 100%; padding: 10px 14px; display: flex; flex-direction: column; }
 
+    /* Header */
     .header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 8px 14px; margin-bottom: 10px;
+      padding: 6px 12px; margin-bottom: 8px;
       background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-      border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
     }
     .header-left { display: flex; align-items: center; gap: 8px; }
     .home-btn {
-      color: #fff; text-decoration: none; font-size: 18px;
+      color: #fff; text-decoration: none; font-size: 16px;
       display: inline-flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; border-radius: 6px;
+      width: 28px; height: 28px; border-radius: 6px;
       background: rgba(255,255,255,0.15); transition: background 0.2s;
     }
     .home-btn:hover { background: rgba(255,255,255,0.25); }
-    .app-title { font-size: 16px; font-weight: 700; }
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .master-vol-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .app-title { font-size: 15px; font-weight: 700; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .master-label { font-size: 11px; color: rgba(255,255,255,0.6); }
     .master-slider {
-      width: 80px; -webkit-appearance: none; height: 4px; border-radius: 2px;
+      width: 70px; -webkit-appearance: none; height: 4px; border-radius: 2px;
       background: rgba(255,255,255,0.2); outline: none;
     }
     .master-slider::-webkit-slider-thumb {
       -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
-      background: #4ade80; cursor: pointer;
+      background: #4ade80; cursor: pointer; box-shadow: 0 0 6px rgba(74,222,128,0.5);
     }
 
-    .main { flex: 1; display: flex; gap: 12px; overflow: hidden; }
+    /* 主網格區 */
+    .main { flex: 1; display: flex; gap: 10px; overflow: hidden; }
 
-    /* 音源网格 */
+    /* 音源網格 - 3行4列 */
     .sounds-grid {
-      flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr);
+      gap: 8px;
     }
     .sound-card {
       background: rgba(255,255,255,0.08); backdrop-filter: blur(5px);
       border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
-      padding: 12px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 8px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
       cursor: pointer; transition: all 0.25s; position: relative;
+      min-height: 0;
     }
     .sound-card:hover { background: rgba(255,255,255,0.14); transform: translateY(-2px); }
     .sound-card.active {
-      background: rgba(168,85,247,0.3); border-color: rgba(168,85,247,0.5);
-      box-shadow: 0 0 20px rgba(168,85,247,0.3);
+      background: rgba(168,85,247,0.25); border-color: rgba(168,85,247,0.4);
+      box-shadow: 0 0 15px rgba(168,85,247,0.25);
     }
-    .sound-icon { font-size: 28px; }
-    .sound-name { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; }
-    .sound-slider-wrap { width: 100%; padding: 0 4px; margin-top: 2px; }
+    .sound-icon { font-size: 26px; margin-bottom: 2px; }
+    .sound-name { font-size: 12px; font-weight: 600; letter-spacing: 0.5px; white-space: nowrap; }
+    
+    .slider-wrap { width: 100%; padding: 0 2px; margin-top: 2px; }
     .sound-slider {
       width: 100%; -webkit-appearance: none; height: 3px; border-radius: 2px;
       background: rgba(255,255,255,0.15); outline: none;
@@ -68,80 +73,80 @@
     .sound-slider::-webkit-slider-thumb {
       -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%;
       background: #e9d5ff; cursor: pointer; box-shadow: 0 0 6px rgba(168,85,247,0.5);
+      transition: all 0.2s;
     }
-    .sound-card.active .sound-slider::-webkit-slider-thumb { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.5); }
-    .vol-text { font-size: 10px; color: rgba(255,255,255,0.4); }
+    .sound-card.active .sound-slider::-webkit-slider-thumb {
+      background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.6);
+    }
+    .vol-text { font-size: 9px; color: rgba(255,255,255,0.45); margin-top: 1px; }
 
-    /* 波形动画 */
+    /* 波形動畫條 */
     .wave-bar {
       position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
       border-radius: 0 0 12px 12px; overflow: hidden;
     }
     .wave-bar-fill {
-      height: 100%; width: 0%; border-radius: 0 0 12px 12px;
+      height: 100%; width: 0%;
       background: linear-gradient(90deg, #4ade80, #a855f7);
       transition: width 0.3s;
     }
-    .sound-card.active .wave-bar-fill { animation: waveAnim 2s infinite; }
+    .sound-card.active .wave-bar-fill { animation: waveAnim 2s infinite ease-in-out; }
     @keyframes waveAnim {
-      0% { width: 30%; } 50% { width: 100%; } 100% { width: 30%; }
+      0%,100% { width: 25%; } 50% { width: 85%; }
     }
 
-    /* 右侧面板 */
-    .side-panel { width: 200px; display: flex; flex-direction: column; gap: 10px; }
+    /* 右側控制面板 */
+    .side-panel {
+      width: 165px; display: flex; flex-direction: column; gap: 8px;
+    }
 
     .card {
       background: rgba(255,255,255,0.08); backdrop-filter: blur(5px);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 14px;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px;
     }
     .card-title {
-      font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6);
-      letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.6);
+      letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
     }
 
-    /* 定时器 */
-    .timer-presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    /* 定時器按鈕 */
+    .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
     .timer-btn {
-      padding: 8px 0; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
-      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8);
-      font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;
+      padding: 6px 0; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85);
+      font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center;
     }
     .timer-btn:hover { background: rgba(255,255,255,0.12); }
     .timer-btn.active { background: rgba(74,222,128,0.25); border-color: rgba(74,222,128,0.4); color: #4ade80; }
     .timer-display {
-      text-align: center; margin-top: 10px; font-size: 22px; font-weight: 700;
+      text-align: center; margin-top: 8px; font-size: 20px; font-weight: 700;
       color: #4ade80; font-variant-numeric: tabular-nums;
     }
     .timer-display.off { color: rgba(255,255,255,0.3); }
 
-    /* 预设场景 */
-    .scene-list { display: flex; flex-direction: column; gap: 6px; }
+    /* 場景按鈕 */
+    .scene-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
     .scene-btn {
-      padding: 8px 10px; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px;
-      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.8);
-      font-size: 12px; cursor: pointer; transition: all 0.2s;
-      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.85);
+      font-size: 10px; cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
     }
-    .scene-btn:hover { background: rgba(255,255,255,0.12); }
-    .scene-icon { font-size: 16px; }
+    .scene-btn:hover { background: rgba(255,255,255,0.1); }
+    .scene-icon { font-size: 14px; }
 
-    /* 状态 */
-    .status-card {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 8px; font-size: 12px; color: rgba(255,255,255,0.5);
-    }
-    .active-count { color: #4ade80; font-weight: 700; font-size: 14px; }
-
+    /* Footer */
     .footer {
-      margin-top: 10px; padding: 6px 14px;
+      margin-top: 8px; padding: 5px 12px;
       background: rgba(0,0,0,0.2); border-radius: 8px;
-      font-size: 11px; color: rgba(255,255,255,0.5);
+      font-size: 11px; color: rgba(255,255,255,0.55);
       display: flex; justify-content: space-between; align-items: center;
     }
-    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .footer-left { display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; }
     .status-dot.active { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+    .active-count { color: #4ade80; font-weight: 700; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -152,43 +157,42 @@
         <div class="app-title">🎧 白噪音專注器</div>
       </div>
       <div class="header-right">
-        <span class="master-vol-label">主音量</span>
+        <span class="master-label">主音量</span>
         <input type="range" class="master-slider" id="masterVol" min="0" max="100" value="70">
       </div>
     </div>
 
     <div class="main">
+      <!-- 音源網格 -->
       <div class="sounds-grid" id="soundsGrid"></div>
 
+      <!-- 右側控制面板 -->
       <div class="side-panel">
-        <!-- 定时关闭 -->
+        <!-- 定時關閉 -->
         <div class="card">
-          <div class="card-title">⏱ 定時關閉</div>
-          <div class="timer-presets">
+          <div class="card-title">⏱ 定時</div>
+          <div class="timer-grid">
             <div class="timer-btn" onclick="setTimer(15)">15 分</div>
             <div class="timer-btn" onclick="setTimer(30)">30 分</div>
             <div class="timer-btn" onclick="setTimer(45)">45 分</div>
             <div class="timer-btn" onclick="setTimer(60)">60 分</div>
             <div class="timer-btn" onclick="setTimer(90)">90 分</div>
-            <div class="timer-btn" onclick="setTimer(0)">取消</div>
+            <div class="timer-btn" onclick="setTimer(0)">關</div>
           </div>
           <div class="timer-display off" id="timerDisplay">--:--</div>
         </div>
 
-        <!-- 预设场景 -->
+        <!-- 快速場景 -->
         <div class="card" style="flex:1;">
-          <div class="card-title">🎬 快速場景</div>
-          <div class="scene-list">
-            <div class="scene-btn" onclick="loadScene('study')"><span class="scene-icon">📚</span> 深度學習</div>
-            <div class="scene-btn" onclick="loadScene('relax')"><span class="scene-icon">🌊</span> 放鬆冥想</div>
-            <div class="scene-btn" onclick="loadScene('cafe')"><span class="scene-icon">☕</span> 咖啡廳氛圍</div>
-            <div class="scene-btn" onclick="loadScene('nature')"><span class="scene-icon">🌿</span> 大自然</div>
-            <div class="scene-btn" onclick="loadScene('sleep')"><span class="scene-icon">😴</span> 助眠模式</div>
+          <div class="card-title">🎬 場景</div>
+          <div class="scene-grid">
+            <div class="scene-btn" onclick="loadScene('study')"><span class="scene-icon">📚</span>學習</div>
+            <div class="scene-btn" onclick="loadScene('relax')"><span class="scene-icon">🌊</span>放鬆</div>
+            <div class="scene-btn" onclick="loadScene('cafe')"><span class="scene-icon">☕</span>咖啡</div>
+            <div class="scene-btn" onclick="loadScene('nature')"><span class="scene-icon">🌿</span>自然</div>
+            <div class="scene-btn" onclick="loadScene('sleep')"><span class="scene-icon">😴</span>助眠</div>
+            <div class="scene-btn" onclick="loadScene('focus')"><span class="scene-icon">🎯</span>專注</div>
           </div>
-        </div>
-
-        <div class="status-card">
-          播放中: <span class="active-count" id="activeCount">0</span> 個音源
         </div>
       </div>
     </div>
@@ -196,7 +200,7 @@
     <div class="footer">
       <div class="footer-left">
         <div class="status-dot" id="statusDot"></div>
-        <span id="statusText">準備就緒</span>
+        <span>播放中：<span class="active-count" id="activeCount">0</span> 個音源</span>
       </div>
       <div id="clock"></div>
     </div>
@@ -219,13 +223,14 @@
       { id: 'night',     icon: '🌙', name: '夜晚蟲鳴', type: 'night' },
     ];
 
-    // 预设场景
+    // 預設場景
     const SCENES = {
-      study:  { rain: 40, cafe: 30, keyboard: 20 },
+      study:  { rain: 40, cafe: 30, keyboard: 25 },
       relax:  { ocean: 60, birds: 30, wind: 20 },
-      cafe:   { cafe: 60, rain: 20 },
+      cafe:   { cafe: 60, rain: 25 },
       nature: { creek: 50, birds: 40, wind: 25 },
       sleep:  { rain: 35, night: 40, ocean: 25 },
+      focus:  { whitenoise: 45, rain: 30 },
     };
 
     let audioCtx = null;
@@ -346,7 +351,6 @@
         }
       }
 
-      // 低通滤波让声音更柔和
       const source = audioCtx.createBufferSource();
       source.buffer = buffer;
       source.loop = true;
@@ -366,7 +370,7 @@
       return { source, gain, filter };
     }
 
-    // ─── UI ───
+    // ─── UI 初始化 ───
     function initUI() {
       const grid = document.getElementById('soundsGrid');
       SOUNDS.forEach(s => {
@@ -374,7 +378,7 @@
           <div class="sound-card" id="card-${s.id}" onclick="toggleSound('${s.id}')">
             <div class="sound-icon">${s.icon}</div>
             <div class="sound-name">${s.name}</div>
-            <div class="sound-slider-wrap">
+            <div class="slider-wrap">
               <input type="range" class="sound-slider" id="vol-${s.id}" min="0" max="100" value="50"
                 onclick="event.stopPropagation()" oninput="setVolume('${s.id}', this.value)">
             </div>
@@ -389,14 +393,12 @@
       const sound = SOUNDS.find(s => s.id === id);
 
       if (sources[id]) {
-        // 关闭
         sources[id].gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
         const src = sources[id];
         setTimeout(() => { try { src.source.stop(); } catch(e){} }, 400);
         delete sources[id];
         card.classList.remove('active');
       } else {
-        // 开启
         initAudio();
         sources[id] = createNoiseSource(sound.type);
         const vol = parseInt(document.getElementById('vol-' + id).value) / 100;
@@ -413,14 +415,12 @@
       }
     }
 
-    // 主音量
     document.getElementById('masterVol').addEventListener('input', e => {
       if (masterGain) masterGain.gain.value = e.target.value / 100;
     });
 
-    // ─── 场景 ───
+    // ─── 場景 ───
     function loadScene(name) {
-      // 先全部关闭
       Object.keys(sources).forEach(id => {
         sources[id].gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
         const src = sources[id];
@@ -429,7 +429,6 @@
       });
       sources = {};
 
-      // 加载场景
       setTimeout(() => {
         const scene = SCENES[name];
         if (!scene) return;
@@ -446,7 +445,7 @@
       }, 350);
     }
 
-    // ─── 定时 ───
+    // ─── 定時器 ───
     function setTimer(minutes) {
       document.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active'));
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -469,10 +468,8 @@
         if (timerRemain <= 0) {
           clearInterval(timerInterval);
           timerInterval = null;
-          // 停止所有音源
           Object.keys(sources).forEach(id => toggleSound(id));
           document.getElementById('timerDisplay').textContent = '00:00';
-          document.getElementById('statusText').textContent = '定時結束，已停止播放';
         }
       }, 1000);
     }
@@ -484,21 +481,17 @@
         `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     }
 
-    // ─── 状态 ───
     function updateStatus() {
       const count = Object.keys(sources).length;
       document.getElementById('activeCount').textContent = count;
       document.getElementById('statusDot').classList.toggle('active', count > 0);
-      document.getElementById('statusText').textContent = count > 0 ? `${count} 個音源播放中` : '準備就緒';
     }
 
-    // ─── 时钟 ───
     function updateClock() {
       document.getElementById('clock').textContent =
         new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 初始化
     initUI();
     updateClock();
     setInterval(updateClock, 1000);
