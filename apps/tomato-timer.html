@@ -1,303 +1,113 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🍅 番茄钟</title>
+  <meta name="viewport" content="width=800, height=480">
+  <title>🍅 番茄鐘 - Echo</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #f5f7fa;
-      width: 800px;
-      height: 480px;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      width: 800px; height: 480px; overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
     }
+    .container { width: 100%; height: 100%; padding: 16px 20px; display: flex; flex-direction: column; }
 
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      height: 100%;
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 顶部标题栏 */
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #e8eaed;
-      margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 15px; margin-bottom: 12px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
     }
-
-    /* 返回按钮 */
-    .back-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: #f0f0f0;
-      border: none;
-      border-radius: 8px;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-decoration: none;
+    .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s; margin-right: 6px;
     }
-
-    .back-btn:hover {
-      background: #e0e0e0;
-      color: #f5576c;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-icon {
-      font-size: 24px;
-    }
-
-    .header-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-    }
-
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
     .header-count {
-      background: #ff6b6b;
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
+      background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 13px;
     }
 
-    /* 主内容区 */
-    .main-content {
-      flex: 1;
-      display: flex;
-      gap: 40px;
-      align-items: center;
-    }
+    .main { flex: 1; display: flex; gap: 20px; align-items: center; }
 
-    /* 左侧计时器 */
-    .timer-section {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
+    /* 计时器 */
+    .timer-section { flex: 1; display: flex; justify-content: center; align-items: center; }
     .timer-circle {
-      width: 240px;
-      height: 240px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      box-shadow: 0 8px 24px rgba(245, 87, 108, 0.3);
+      width: 240px; height: 240px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); border: 3px solid rgba(255,255,255,0.2);
+      display: flex; justify-content: center; align-items: center;
+      position: relative; backdrop-filter: blur(5px);
     }
-
-    .timer-display {
-      font-size: 56px;
-      font-weight: bold;
-      color: white;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    }
-
+    .timer-display { font-size: 56px; font-weight: bold; color: #fff; }
     .timer-label {
-      position: absolute;
-      bottom: 50px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.9);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      position: absolute; bottom: 55px; font-size: 12px;
+      color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 2px;
     }
 
-    /* 右侧控制区 */
-    .control-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    /* 右侧控制 */
+    .control-section { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .card {
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); padding: 14px;
     }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .card label { font-size: 13px; color: rgba(255,255,255,0.7); display: block; margin-bottom: 6px; }
+    .card input[type="number"], .card input[type="text"] {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; color: #fff; font-size: 15px; outline: none;
     }
+    .card input::placeholder { color: rgba(255,255,255,0.4); }
+    .card input:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.18); }
 
-    label {
-      font-size: 13px;
-      color: #666;
-      font-weight: 500;
+    .button-group { display: flex; gap: 10px; }
+    .btn {
+      flex: 1; padding: 14px; border: none; border-radius: 10px;
+      font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
-
-    input[type="text"],
-    input[type="number"] {
-      padding: 12px 16px;
-      border: 2px solid #e8eaed;
-      border-radius: 8px;
-      font-size: 15px;
-      transition: all 0.3s;
-      background: #fafbfc;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #f5576c;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
-    }
-
-    input::placeholder {
-      color: #aaa;
-    }
-
-    /* 按钮组 */
-    .button-group {
-      display: flex;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    button {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
     .btn-start {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+      background: rgba(74,222,128,0.3); color: #4ade80; border: 1px solid rgba(74,222,128,0.4);
     }
-
-    .btn-start:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
-    }
-
-    .btn-start:active {
-      transform: translateY(0);
-    }
-
+    .btn-start:hover { background: rgba(74,222,128,0.4); }
     .btn-start.running {
-      background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 100%);
-      box-shadow: 0 4px 12px rgba(136, 216, 176, 0.3);
+      background: rgba(251,191,36,0.3); color: #fbbf24; border-color: rgba(251,191,36,0.4);
     }
-
-    .btn-start.running:hover {
-      box-shadow: 0 6px 16px rgba(136, 216, 176, 0.4);
-    }
-
     .btn-reset {
-      background: #f0f0f0;
-      color: #666;
+      background: rgba(248,113,113,0.2); color: #f87171; border: 1px solid rgba(248,113,113,0.3);
     }
-
-    .btn-reset:hover {
-      background: #e0e0e0;
-    }
-
+    .btn-reset:hover { background: rgba(248,113,113,0.3); }
     .btn-skip {
-      background: #fff3cd;
-      color: #856404;
+      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.2);
     }
+    .btn-skip:hover { background: rgba(255,255,255,0.2); }
 
-    .btn-skip:hover {
-      background: #ffe69c;
+    .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 15px; margin-top: 12px;
+      background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.6);
     }
-
-    /* 底部状态栏 */
-    .status-bar {
-      margin-top: auto;
-      padding-top: 20px;
-      border-top: 1px solid #e8eaed;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .status-text {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      color: #666;
-    }
-
+    .footer-left { display: flex; align-items: center; gap: 8px; }
     .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #ddd;
+      width: 7px; height: 7px; background: #ddd; border-radius: 50%;
     }
-
-    .status-dot.running {
-      background: #f5576c;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(1.2); }
-    }
-
-    .task-display {
-      font-size: 14px;
-      color: #333;
-      font-weight: 500;
-      max-width: 300px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    .status-dot.running { background: #4ade80; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 顶部标题栏 -->
     <div class="header">
-      <div class="header-left">
-        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
-        <span class="header-icon">🍅</span>
-        <span class="header-title">番茄钟</span>
-      </div>
-      <div class="header-count">
-        今日完成：<span id="pomodoroCount">0</span> 个
-      </div>
+      <h1>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        🍅 番茄鐘
+      </h1>
+      <div class="header-count">今日完成：<span id="pomodoroCount">0</span> 個</div>
     </div>
 
-    <!-- 主内容区 -->
-    <div class="main-content">
-      <!-- 左侧计时器 -->
+    <div class="main">
       <div class="timer-section">
         <div class="timer-circle">
           <div class="timer-display" id="timer">25:00</div>
@@ -305,254 +115,94 @@
         </div>
       </div>
 
-      <!-- 右侧控制区 -->
       <div class="control-section">
-        <div class="input-group">
-          <label>預設時間（分钟）</label>
+        <div class="card">
+          <label>預設時間（分鐘）</label>
           <input type="number" id="presetTime" value="25" min="1" max="60">
         </div>
-
-        <div class="input-group">
-          <label>任務名</label>
-          <input type="text" id="taskName" placeholder="输入当前任务...">
+        <div class="card">
+          <label>任務名稱</label>
+          <input type="text" id="taskName" placeholder="輸入當前任務...">
         </div>
-
         <div class="button-group">
-          <button class="btn-start" id="startBtn">开</button>
-          <button class="btn-reset" id="resetBtn">重</button>
-          <button class="btn-skip" id="skipBtn">跳</button>
+          <button class="btn btn-start" id="startBtn">▶ 開始</button>
+          <button class="btn btn-reset" id="resetBtn">↺ 重置</button>
+          <button class="btn btn-skip" id="skipBtn">⏭ 跳過</button>
         </div>
       </div>
     </div>
 
-    <!-- 底部状态栏 -->
-    <div class="status-bar">
-      <div class="status-text">
+    <div class="footer">
+      <div class="footer-left">
         <div class="status-dot" id="statusDot"></div>
-        <span id="statusText">准备开始</span>
+        <span id="statusText">準備開始</span>
       </div>
-      <div class="task-display" id="taskDisplay">-</div>
+      <div id="taskDisplay">-</div>
     </div>
   </div>
 
   <script>
-    // 状态变量
-    let timeLeft = 25 * 60;
-    let totalTime = 25 * 60;
-    let isRunning = false;
-    let timerId = null;
-    let pomodoroCount = 0;
-    let isWorkPhase = true;
+    let timeLeft = 25 * 60, totalTime = 25 * 60, isRunning = false, timerId = null, pomodoroCount = 0, isWorkPhase = true;
+    const timerDisplay = document.getElementById('timer'), startBtn = document.getElementById('startBtn'),
+      resetBtn = document.getElementById('resetBtn'), skipBtn = document.getElementById('skipBtn'),
+      presetTimeInput = document.getElementById('presetTime'), taskNameInput = document.getElementById('taskName'),
+      statusText = document.getElementById('statusText'), statusDot = document.getElementById('statusDot'),
+      pomodoroCountDisplay = document.getElementById('pomodoroCount'), phaseLabel = document.getElementById('phaseLabel'),
+      taskDisplay = document.getElementById('taskDisplay');
 
-    // DOM 元素
-    const timerDisplay = document.getElementById('timer');
-    const startBtn = document.getElementById('startBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const skipBtn = document.getElementById('skipBtn');
-    const presetTimeInput = document.getElementById('presetTime');
-    const taskNameInput = document.getElementById('taskName');
-    const statusText = document.getElementById('statusText');
-    const statusDot = document.getElementById('statusDot');
-    const pomodoroCountDisplay = document.getElementById('pomodoroCount');
-    const phaseLabel = document.getElementById('phaseLabel');
-    const taskDisplay = document.getElementById('taskDisplay');
+    function formatTime(s) { return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
+    function updateDisplay() { timerDisplay.textContent = formatTime(timeLeft); }
+    function updateTaskDisplay() { taskDisplay.textContent = taskNameInput.value.trim() || '-'; }
 
-    // 格式化时间
-    function formatTime(seconds) {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    // 更新显示
-    function updateDisplay() {
-      timerDisplay.textContent = formatTime(timeLeft);
-      document.title = `${formatTime(timeLeft)} - 番茄钟`;
-    }
-
-    // 更新任务显示
-    function updateTaskDisplay() {
-      const task = taskNameInput.value.trim();
-      taskDisplay.textContent = task || '-';
-    }
-
-    // 开始/暂停
     function toggleTimer() {
       if (isRunning) {
-        // 暂停
-        clearInterval(timerId);
-        startBtn.textContent = '开';
-        startBtn.classList.remove('running');
-        statusText.textContent = '已暂停';
-        statusDot.classList.remove('running');
-        phaseLabel.textContent = 'PAUSED';
+        clearInterval(timerId); startBtn.innerHTML = '▶ 開始'; startBtn.classList.remove('running');
+        statusText.textContent = '已暫停'; statusDot.classList.remove('running'); phaseLabel.textContent = 'PAUSED';
       } else {
-        // 开始
-        const presetMinutes = parseInt(presetTimeInput.value) || 25;
-        if (timeLeft === 0) {
-          timeLeft = presetMinutes * 60;
-          totalTime = timeLeft;
-        }
-        
-        timerId = setInterval(() => {
-          timeLeft--;
-          updateDisplay();
-
-          if (timeLeft <= 0) {
-            clearInterval(timerId);
-            timerComplete();
-          }
-        }, 1000);
-
-        startBtn.textContent = '停';
-        startBtn.classList.add('running');
-        statusText.textContent = isWorkPhase ? '专注中...' : '休息中...';
-        statusDot.classList.add('running');
-        phaseLabel.textContent = isWorkPhase ? 'FOCUS' : 'BREAK';
+        const m = parseInt(presetTimeInput.value) || 25;
+        if (timeLeft === 0) { timeLeft = m * 60; totalTime = timeLeft; }
+        timerId = setInterval(() => { timeLeft--; updateDisplay(); if (timeLeft <= 0) { clearInterval(timerId); timerComplete(); } }, 1000);
+        startBtn.innerHTML = '⏸ 暫停'; startBtn.classList.add('running');
+        statusText.textContent = isWorkPhase ? '專注中...' : '休息中...';
+        statusDot.classList.add('running'); phaseLabel.textContent = isWorkPhase ? 'FOCUS' : 'BREAK';
         updateTaskDisplay();
       }
       isRunning = !isRunning;
     }
 
-    // 计时完成
     function timerComplete() {
-      isRunning = false;
-      startBtn.textContent = '开';
-      startBtn.classList.remove('running');
-      statusDot.classList.remove('running');
-
+      isRunning = false; startBtn.innerHTML = '▶ 開始'; startBtn.classList.remove('running'); statusDot.classList.remove('running');
       if (isWorkPhase) {
-        pomodoroCount++;
-        pomodoroCountDisplay.textContent = pomodoroCount;
-        statusText.textContent = '✅ 完成！';
-        phaseLabel.textContent = 'DONE';
-        
-        setTimeout(() => {
-          if (confirm('🎉 番茄完成！开始 5 分钟休息吗？')) {
-            startBreakPhase();
-          }
-        }, 500);
-      } else {
-        statusText.textContent = '休息结束';
-        phaseLabel.textContent = 'READY';
-      }
-
-      playNotificationSound();
+        pomodoroCount++; pomodoroCountDisplay.textContent = pomodoroCount;
+        statusText.textContent = '✅ 完成！'; phaseLabel.textContent = 'DONE';
+        playSound();
+        setTimeout(() => { if (confirm('🎉 番茄完成！開始 5 分鐘休息嗎？')) { isWorkPhase = false; timeLeft = 5*60; totalTime = timeLeft; updateDisplay(); } }, 500);
+      } else { statusText.textContent = '休息結束'; phaseLabel.textContent = 'READY'; playSound(); }
     }
 
-    // 开始休息阶段
-    function startBreakPhase() {
-      isWorkPhase = false;
-      timeLeft = 5 * 60;
-      totalTime = timeLeft;
-      updateDisplay();
-      statusText.textContent = '休息中...';
-      statusDot.classList.add('running');
-      phaseLabel.textContent = 'BREAK';
-    }
-
-    // 重置
     function resetTimer() {
-      clearInterval(timerId);
-      isRunning = false;
-      const presetMinutes = parseInt(presetTimeInput.value) || 25;
-      timeLeft = presetMinutes * 60;
-      totalTime = timeLeft;
-      updateDisplay();
-      startBtn.textContent = '开';
-      startBtn.classList.remove('running');
-      statusText.textContent = '准备开始';
-      statusDot.classList.remove('running');
-      phaseLabel.textContent = 'READY';
-      document.title = '🍅 番茄钟';
+      clearInterval(timerId); isRunning = false; const m = parseInt(presetTimeInput.value) || 25;
+      timeLeft = m * 60; totalTime = timeLeft; updateDisplay();
+      startBtn.innerHTML = '▶ 開始'; startBtn.classList.remove('running');
+      statusText.textContent = '準備開始'; statusDot.classList.remove('running'); phaseLabel.textContent = 'READY';
     }
 
-    // 跳过
     function skipTimer() {
-      clearInterval(timerId);
-      isRunning = false;
-      
-      if (isWorkPhase) {
-        if (confirm('确定要跳过当前番茄吗？')) {
-          startBreakPhase();
-        }
-      } else {
-        isWorkPhase = true;
-        const presetMinutes = parseInt(presetTimeInput.value) || 25;
-        timeLeft = presetMinutes * 60;
-        totalTime = timeLeft;
-        statusText.textContent = '准备下一个番茄';
-        phaseLabel.textContent = 'READY';
-      }
-      
-      startBtn.textContent = '开';
-      startBtn.classList.remove('running');
-      statusDot.classList.remove('running');
-      updateDisplay();
+      clearInterval(timerId); isRunning = false;
+      if (isWorkPhase) { if (confirm('確定跳過？')) { isWorkPhase = false; timeLeft = 5*60; totalTime = timeLeft; } }
+      else { isWorkPhase = true; const m = parseInt(presetTimeInput.value) || 25; timeLeft = m*60; totalTime = timeLeft; statusText.textContent = '準備下一個番茄'; phaseLabel.textContent = 'READY'; }
+      startBtn.innerHTML = '▶ 開始'; startBtn.classList.remove('running'); statusDot.classList.remove('running'); updateDisplay();
     }
 
-    // 播放提示音
-    function playNotificationSound() {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.frequency.value = 800;
-        oscillator.type = 'sine';
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.5);
-      } catch (e) {
-        console.log('音频播放失败:', e);
-      }
+    function playSound() {
+      try { const a = new AudioContext(), o = a.createOscillator(), g = a.createGain(); o.connect(g); g.connect(a.destination); o.frequency.value = 800; g.gain.setValueAtTime(0.3, a.currentTime); o.start(a.currentTime); o.stop(a.currentTime + 0.5); } catch(e){}
     }
 
-    // 播放按钮音效
-    function playClickSound(type) {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        if (type === 'start') {
-          oscillator.frequency.value = 600;
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.08);
-        } else if (type === 'stop') {
-          oscillator.frequency.value = 400;
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.08);
-        } else {
-          oscillator.frequency.value = 500;
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.05);
-        }
-      } catch (e) {}
-    }
-
-    // 事件监听
-    startBtn.addEventListener('click', () => { playClickSound(isRunning ? 'stop' : 'start'); toggleTimer(); });
-    resetBtn.addEventListener('click', () => { playClickSound('reset'); resetTimer(); });
-    skipBtn.addEventListener('click', () => { playClickSound('skip'); skipTimer(); });
+    startBtn.addEventListener('click', toggleTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    skipBtn.addEventListener('click', skipTimer);
     taskNameInput.addEventListener('input', updateTaskDisplay);
-
-    presetTimeInput.addEventListener('change', () => {
-      if (!isRunning) {
-        const minutes = parseInt(presetTimeInput.value) || 25;
-        timeLeft = minutes * 60;
-        totalTime = timeLeft;
-        updateDisplay();
-      }
-    });
-
-    // 初始化
+    presetTimeInput.addEventListener('change', () => { if (!isRunning) { timeLeft = (parseInt(presetTimeInput.value)||25)*60; totalTime = timeLeft; updateDisplay(); } });
     updateDisplay();
   </script>
 </body>

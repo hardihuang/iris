@@ -1,191 +1,184 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📅 日历</title>
+  <meta name="viewport" content="width=800, height=480">
+  <title>📅 日曆 - Echo</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f7fa;
-      width: 800px;
-      height: 480px;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      width: 800px; height: 480px; overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
     }
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      height: 100%;
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-    }
+    .container { width: 100%; height: 100%; padding: 16px 20px; display: flex; flex-direction: column; }
+
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #e8eaed;
-      margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 15px; margin-bottom: 12px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
     }
-    .back-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: #f0f0f0;
-      border-radius: 8px;
-      color: #666;
-      font-size: 14px;
-      text-decoration: none;
-      transition: all 0.3s;
+    .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s; margin-right: 6px;
     }
-    .back-btn:hover { background: #e0e0e0; color: #f5576c; }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-icon { font-size: 24px; }
-    .header-title { font-size: 20px; font-weight: 600; color: #333; }
-    .header-nav { display: flex; align-items: center; gap: 15px; }
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
+    .header-nav { display: flex; align-items: center; gap: 10px; }
     .nav-btn {
-      padding: 8px 16px;
-      border: none;
-      background: #f0f0f0;
-      border-radius: 8px;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
+      padding: 6px 14px; border: none;
+      background: rgba(255,255,255,0.12); border-radius: 8px;
+      color: rgba(255,255,255,0.8); font-size: 14px; cursor: pointer; transition: all 0.2s;
     }
-    .nav-btn:hover { background: #e0e0e0; }
-    .current-month { font-size: 18px; font-weight: 600; color: #333; min-width: 120px; text-align: center; }
-    .today-btn { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-    .main-content { flex: 1; display: flex; gap: 20px; }
-    .calendar-section { flex: 1; display: flex; flex-direction: column; }
-    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 10px; }
-    .weekday { text-align: center; font-size: 14px; font-weight: 600; color: #666; padding: 10px; }
-    .weekday.weekend { color: #f5576c; }
-    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; flex: 1; }
+    .nav-btn:hover { background: rgba(255,255,255,0.22); }
+    .current-month { font-size: 16px; font-weight: 600; min-width: 110px; text-align: center; }
+    .today-btn { background: rgba(74,222,128,0.25); color: #4ade80; border: 1px solid rgba(74,222,128,0.35); }
+    .today-btn:hover { background: rgba(74,222,128,0.35); }
+
+    .main { flex: 1; display: flex; gap: 14px; overflow: hidden; }
+
+    /* 日历 */
+    .calendar-section {
+      flex: 1; display: flex; flex-direction: column;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); padding: 14px;
+    }
+    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 8px; }
+    .weekday { text-align: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); padding: 6px; }
+    .weekday.weekend { color: rgba(248,113,113,0.8); }
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; flex: 1; }
     .day-cell {
-      background: #fafbfc;
-      border: 2px solid #e8eaed;
-      border-radius: 10px;
-      padding: 8px;
-      cursor: pointer;
-      transition: all 0.3s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 50px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 5px; cursor: pointer; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      min-height: 42px;
     }
-    .day-cell:hover { border-color: #f5576c; background: white; }
-    .day-cell.other-month { opacity: 0.3; }
-    .day-cell.today { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-color: transparent; color: white; }
-    .day-cell.today .day-number { color: white; }
-    .day-cell.selected { border-color: #f5576c; background: rgba(245, 87, 108, 0.1); }
-    .day-number { font-size: 16px; font-weight: 600; color: #333; }
-    .day-cell.weekend .day-number { color: #f5576c; }
-    .event-dots { display: flex; gap: 3px; margin-top: 4px; }
-    .event-dot { width: 6px; height: 6px; border-radius: 50%; background: #f5576c; }
+    .day-cell:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
+    .day-cell.other-month { opacity: 0.25; }
+    .day-cell.today {
+      background: rgba(168,85,247,0.4); border-color: rgba(168,85,247,0.6);
+    }
+    .day-cell.selected { border-color: rgba(74,222,128,0.6); background: rgba(74,222,128,0.15); }
+    .day-number { font-size: 14px; font-weight: 600; }
+    .day-cell.weekend .day-number { color: rgba(248,113,113,0.9); }
+    .day-cell.today .day-number { color: #fff; }
+    .event-dots { display: flex; gap: 2px; margin-top: 3px; }
+    .event-dot { width: 5px; height: 5px; border-radius: 50%; background: #4ade80; }
+
+    /* 事件面板 */
     .events-section {
-      width: 200px;
-      background: #fafbfc;
-      border: 2px solid #e8eaed;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
+      width: 200px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); padding: 14px;
+      display: flex; flex-direction: column;
     }
-    .events-header { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e8eaed; }
-    .selected-date { font-size: 14px; color: #f5576c; margin-bottom: 10px; }
-    .events-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; max-height: 120px; }
-    .event-item { background: white; border: 1px solid #e8eaed; border-radius: 8px; padding: 10px; cursor: pointer; transition: all 0.3s; }
-    .event-item:hover { border-color: #f5576c; }
-    .event-time { font-size: 12px; color: #f5576c; font-weight: 600; margin-bottom: 4px; }
-    .event-title { font-size: 14px; color: #333; }
-    .no-events { text-align: center; color: #999; font-size: 14px; padding: 40px 0; }
+    .events-header { font-size: 14px; font-weight: 600; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .selected-date { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+    .events-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .events-list::-webkit-scrollbar { width: 4px; }
+    .events-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+    .event-item {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; padding: 8px 10px; transition: all 0.2s;
+    }
+    .event-item:hover { background: rgba(255,255,255,0.15); }
+    .event-time { font-size: 11px; color: #4ade80; font-weight: 600; margin-bottom: 3px; }
+    .event-title { font-size: 13px; }
+    .no-events { text-align: center; color: rgba(255,255,255,0.4); font-size: 13px; padding: 25px 0; }
     .add-event-btn {
-      margin-top: 10px;
-      padding: 12px;
-      border: none;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      border-radius: 10px;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
+      margin-top: 8px; padding: 10px; border: none;
+      background: rgba(168,85,247,0.3); border: 1px solid rgba(168,85,247,0.4);
+      border-radius: 8px; color: #e9d5ff; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
     }
-    .add-event-btn:hover { box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3); }
+    .add-event-btn:hover { background: rgba(168,85,247,0.45); }
+
+    /* 弹窗 */
     .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); display: flex; justify-content: center;
+      align-items: center; z-index: 100;
     }
-    .modal { background: white; border-radius: 16px; padding: 25px; width: 350px; }
-    .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #333; }
-    .modal-input { width: 100%; padding: 12px; border: 2px solid #e8eaed; border-radius: 8px; font-size: 14px; margin-bottom: 15px; }
-    .modal-input:focus { outline: none; border-color: #f5576c; }
+    .modal {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 14px; padding: 20px; width: 320px;
+    }
+    .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 15px; }
+    .modal-input {
+      width: 100%; padding: 10px 12px;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 8px; color: #fff; font-size: 14px; margin-bottom: 10px; outline: none;
+    }
+    .modal-input::placeholder { color: rgba(255,255,255,0.4); }
+    .modal-input:focus { border-color: rgba(255,255,255,0.45); }
     .modal-buttons { display: flex; gap: 10px; }
-    .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.3s; }
-    .modal-btn-primary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-    .modal-btn-secondary { background: #f0f0f0; color: #666; }
+    .modal-btn {
+      flex: 1; padding: 10px; border: none; border-radius: 8px;
+      font-size: 14px; cursor: pointer; transition: all 0.2s; font-weight: 600;
+    }
+    .modal-btn-primary { background: rgba(74,222,128,0.3); color: #4ade80; border: 1px solid rgba(74,222,128,0.4); }
+    .modal-btn-primary:hover { background: rgba(74,222,128,0.4); }
+    .modal-btn-secondary { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); }
+    .modal-btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+    .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 15px; margin-top: 12px;
+      background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.6);
+    }
+    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <div class="header-left">
-        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
-        <span class="header-icon">📅</span>
-        <span class="header-title">日历</span>
-      </div>
+      <h1>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        📅 日曆
+      </h1>
       <div class="header-nav">
         <button class="nav-btn" id="prevMonth">←</button>
-        <div class="current-month" id="currentMonth">2026年4月</div>
+        <div class="current-month" id="currentMonth"></div>
         <button class="nav-btn" id="nextMonth">→</button>
         <button class="nav-btn today-btn" id="todayBtn">今天</button>
       </div>
     </div>
-    <div class="main-content">
+
+    <div class="main">
       <div class="calendar-section">
         <div class="weekdays">
-          <div class="weekday">一</div>
-          <div class="weekday">二</div>
-          <div class="weekday">三</div>
-          <div class="weekday">四</div>
-          <div class="weekday">五</div>
-          <div class="weekday weekend">六</div>
-          <div class="weekday weekend">日</div>
+          <div class="weekday">一</div><div class="weekday">二</div><div class="weekday">三</div>
+          <div class="weekday">四</div><div class="weekday">五</div>
+          <div class="weekday weekend">六</div><div class="weekday weekend">日</div>
         </div>
         <div class="days-grid" id="daysGrid"></div>
       </div>
+
       <div class="events-section">
         <div class="events-header">📋 事件</div>
-        <div class="selected-date" id="selectedDate">请选择日期</div>
-        <div class="events-list" id="eventsList"><div class="no-events">暂无事件</div></div>
+        <div class="selected-date" id="selectedDate">請選擇日期</div>
+        <div class="events-list" id="eventsList"><div class="no-events">暫無事件</div></div>
         <button class="add-event-btn" id="addEventBtn">+ 添加事件</button>
       </div>
     </div>
+
+    <div class="footer">
+      <div class="footer-left"><div class="status-dot"></div><span>Echo AI 驅動</span></div>
+      <div id="clock"></div>
+    </div>
   </div>
+
   <div class="modal-overlay hidden" id="eventModal">
     <div class="modal">
       <div class="modal-title">添加事件</div>
-      <input type="text" class="modal-input" id="eventTitle" placeholder="事件标题">
+      <input type="text" class="modal-input" id="eventTitle" placeholder="事件標題">
       <input type="time" class="modal-input" id="eventTime">
       <div class="modal-buttons">
         <button class="modal-btn modal-btn-secondary" id="cancelBtn">取消</button>
@@ -193,133 +186,69 @@
       </div>
     </div>
   </div>
+
   <script>
-    let currentDate = new Date();
-    let selectedDate = new Date();
-    let events = JSON.parse(localStorage.getItem('calendar_events')) || {};
-    const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-    
-    // 播放柔和音效
-    function playSound(type) {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        // 使用正弦波，更柔和
-        oscillator.type = 'sine';
-        
-        if (type === 'click') {
-          // 轻柔的点击音
-          oscillator.frequency.setValueAtTime(350, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.08);
-          gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.08);
-        } else if (type === 'select') {
-          // 更轻柔的选择音
-          oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.1);
-        } else if (type === 'nav') {
-          // 最轻的导航音
-          oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.06);
-          gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.06);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.06);
-        }
-      } catch (e) {}
-    }
-    
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      document.getElementById('currentMonth').textContent = year + '年' + monthNames[month];
-      const grid = document.getElementById('daysGrid');
-      grid.innerHTML = '';
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      let startDay = firstDay.getDay();
-      if (startDay === 0) startDay = 7;
-      const prevMonthLastDay = new Date(year, month, 0).getDate();
-      for (let i = startDay - 1; i > 0; i--) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell other-month';
-        cell.innerHTML = '<div class="day-number">' + (prevMonthLastDay - i + 1) + '</div>';
-        grid.appendChild(cell);
+    let currentDate=new Date(),selectedDate=new Date(),events=JSON.parse(localStorage.getItem('calendar_events'))||{};
+    const monthNames=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+    function dateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+    function renderCalendar(){
+      const y=currentDate.getFullYear(),m=currentDate.getMonth();
+      document.getElementById('currentMonth').textContent=y+'年'+monthNames[m];
+      const grid=document.getElementById('daysGrid');grid.innerHTML='';
+      const firstDay=new Date(y,m,1),lastDay=new Date(y,m+1,0);
+      let startDay=firstDay.getDay();if(startDay===0)startDay=7;
+      const prevLast=new Date(y,m,0).getDate();
+
+      for(let i=startDay-1;i>0;i--){
+        const c=document.createElement('div');c.className='day-cell other-month';
+        c.innerHTML=`<div class="day-number">${prevLast-i+1}</div>`;grid.appendChild(c);
       }
-      for (let day = 1; day <= lastDay.getDate(); day++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-        const date = new Date(year, month, day);
-        const today = new Date();
-        if (date.toDateString() === today.toDateString()) cell.classList.add('today');
-        if (date.toDateString() === selectedDate.toDateString()) cell.classList.add('selected');
-        if (date.getDay() === 0 || date.getDay() === 6) cell.classList.add('weekend');
-        let html = '<div class="day-number">' + day + '</div>';
-        if (events[dateStr] && events[dateStr].length > 0) {
-          html += '<div class="event-dots">';
-          events[dateStr].forEach(() => html += '<div class="event-dot"></div>');
-          html += '</div>';
-        }
-        cell.innerHTML = html;
-        cell.onclick = () => { playSound('select'); selectedDate = date; renderCalendar(); renderEvents(); };
-        grid.appendChild(cell);
+      for(let day=1;day<=lastDay.getDate();day++){
+        const c=document.createElement('div');c.className='day-cell';
+        const d=new Date(y,m,day),dk=dateKey(d),today=new Date();
+        if(d.toDateString()===today.toDateString())c.classList.add('today');
+        if(d.toDateString()===selectedDate.toDateString())c.classList.add('selected');
+        if(d.getDay()===0||d.getDay()===6)c.classList.add('weekend');
+        let html=`<div class="day-number">${day}</div>`;
+        if(events[dk]&&events[dk].length){html+='<div class="event-dots">';events[dk].forEach(()=>html+='<div class="event-dot"></div>');html+='</div>';}
+        c.innerHTML=html;
+        c.onclick=()=>{selectedDate=d;renderCalendar();renderEvents();};
+        grid.appendChild(c);
       }
-      const totalCells = grid.children.length;
-      for (let day = 1; day <= 42 - totalCells; day++) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell other-month';
-        cell.innerHTML = '<div class="day-number">' + day + '</div>';
-        grid.appendChild(cell);
+      const total=grid.children.length;
+      for(let d=1;d<=42-total;d++){
+        const c=document.createElement('div');c.className='day-cell other-month';
+        c.innerHTML=`<div class="day-number">${d}</div>`;grid.appendChild(c);
       }
     }
-    
-    function renderEvents() {
-      const dateStr = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + String(selectedDate.getDate()).padStart(2, '0');
-      document.getElementById('selectedDate').textContent = dateStr;
-      const list = document.getElementById('eventsList');
-      const dayEvents = events[dateStr] || [];
-      if (dayEvents.length === 0) {
-        list.innerHTML = '<div class="no-events">暂无事件</div>';
-      } else {
-        list.innerHTML = dayEvents.map(e => '<div class="event-item"><div class="event-time">' + e.time + '</div><div class="event-title">' + e.title + '</div></div>').join('');
-      }
+
+    function renderEvents(){
+      const dk=dateKey(selectedDate);
+      document.getElementById('selectedDate').textContent=dk;
+      const list=document.getElementById('eventsList'),dayEvents=events[dk]||[];
+      list.innerHTML=dayEvents.length?dayEvents.map(e=>`<div class="event-item"><div class="event-time">${e.time||'全天'}</div><div class="event-title">${e.title}</div></div>`).join(''):'<div class="no-events">暫無事件</div>';
     }
-    
-    document.getElementById('prevMonth').onclick = () => { playSound('nav'); currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
-    document.getElementById('nextMonth').onclick = () => { playSound('nav'); currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
-    document.getElementById('todayBtn').onclick = () => { playSound('nav'); currentDate = new Date(); selectedDate = new Date(); renderCalendar(); renderEvents(); };
-    document.getElementById('addEventBtn').onclick = () => { playSound('click'); document.getElementById('eventModal').classList.remove('hidden'); };
-    document.getElementById('cancelBtn').onclick = () => { playSound('click'); document.getElementById('eventModal').classList.add('hidden'); };
-    document.getElementById('saveBtn').onclick = () => {
-      const title = document.getElementById('eventTitle').value.trim();
-      const time = document.getElementById('eventTime').value;
-      if (!title) return alert('请输入事件标题');
-      playSound('click');
-      const dateStr = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + String(selectedDate.getDate()).padStart(2, '0');
-      if (!events[dateStr]) events[dateStr] = [];
-      events[dateStr].push({ title, time });
-      events[dateStr].sort((a, b) => a.time.localeCompare(b.time));
-      localStorage.setItem('calendar_events', JSON.stringify(events));
-      renderCalendar();
-      renderEvents();
+
+    document.getElementById('prevMonth').onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();};
+    document.getElementById('nextMonth').onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();};
+    document.getElementById('todayBtn').onclick=()=>{currentDate=new Date();selectedDate=new Date();renderCalendar();renderEvents();};
+    document.getElementById('addEventBtn').onclick=()=>document.getElementById('eventModal').classList.remove('hidden');
+    document.getElementById('cancelBtn').onclick=()=>document.getElementById('eventModal').classList.add('hidden');
+    document.getElementById('saveBtn').onclick=()=>{
+      const title=document.getElementById('eventTitle').value.trim(),time=document.getElementById('eventTime').value;
+      if(!title)return alert('請輸入事件標題');
+      const dk=dateKey(selectedDate);if(!events[dk])events[dk]=[];
+      events[dk].push({title,time});events[dk].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      localStorage.setItem('calendar_events',JSON.stringify(events));
+      renderCalendar();renderEvents();
       document.getElementById('eventModal').classList.add('hidden');
-      document.getElementById('eventTitle').value = '';
-      document.getElementById('eventTime').value = '';
+      document.getElementById('eventTitle').value='';document.getElementById('eventTime').value='';
     };
-    
-    renderCalendar();
-    renderEvents();
+
+    function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});}
+    renderCalendar();renderEvents();updateClock();setInterval(updateClock,1000);
   </script>
 </body>
 </html>

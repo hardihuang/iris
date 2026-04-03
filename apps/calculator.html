@@ -1,672 +1,205 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔢 计算器</title>
+  <meta name="viewport" content="width=800, height=480">
+  <title>🔢 計算器 - Echo</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: #f5f7fa;
-      width: 800px;
-      height: 480px;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      width: 800px; height: 480px; overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
     }
+    .container { width: 100%; height: 100%; padding: 16px 20px; display: flex; flex-direction: column; }
 
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      width: 100%;
-      height: 100%;
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 顶部标题栏 */
     .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #e8eaed;
-      margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 15px; margin-bottom: 12px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
     }
-
-    /* 返回按钮 */
-    .back-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      background: #f0f0f0;
-      border: none;
-      border-radius: 8px;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-decoration: none;
+    .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s; margin-right: 6px;
     }
-
-    .back-btn:hover {
-      background: #e0e0e0;
-      color: #f5576c;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-icon {
-      font-size: 24px;
-    }
-
-    .header-title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-    }
-
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
     .history-toggle {
-      padding: 8px 16px;
-      border: none;
-      background: #f0f0f0;
-      border-radius: 8px;
-      color: #666;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.3s;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 6px 12px; color: rgba(255,255,255,0.8);
+      font-size: 13px; cursor: pointer; transition: all 0.2s;
     }
+    .history-toggle:hover { background: rgba(255,255,255,0.25); }
 
-    .history-toggle:hover {
-      background: #e0e0e0;
-    }
-
-    /* 主内容区 */
-    .main-content {
-      flex: 1;
-      display: flex;
-      gap: 20px;
-    }
+    .main { flex: 1; display: flex; gap: 15px; overflow: hidden; }
 
     /* 计算器主体 */
     .calculator {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+      flex: 1; display: flex; flex-direction: column; gap: 12px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); padding: 15px;
     }
 
-    /* 显示屏 */
     .display {
-      background: #fafbfc;
-      border: 2px solid #e8eaed;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: right;
-      min-height: 100px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
+      background: rgba(0,0,0,0.2); border-radius: 10px; padding: 15px 20px;
+      text-align: right; min-height: 80px; display: flex; flex-direction: column; justify-content: flex-end;
     }
+    .display-expression { font-size: 14px; color: rgba(255,255,255,0.5); min-height: 20px; }
+    .display-result { font-size: 42px; font-weight: bold; font-family: 'Courier New', monospace; }
 
-    .display-expression {
-      font-size: 16px;
-      color: #999;
-      min-height: 24px;
-      word-break: break-all;
-    }
-
-    .display-result {
-      font-size: 48px;
-      font-weight: bold;
-      color: #333;
-      font-family: 'Courier New', monospace;
-      word-break: break-all;
-    }
-
-    /* 按钮网格 */
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      flex: 1;
-    }
-
+    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1; }
     .btn {
-      border: none;
-      border-radius: 12px;
-      font-size: 24px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      border: none; border-radius: 10px; font-size: 22px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; display: flex; justify-content: center; align-items: center;
     }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-number { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+    .btn-number:hover { background: rgba(255,255,255,0.2); }
+    .btn-operator { background: rgba(168,85,247,0.4); color: #e9d5ff; border: 1px solid rgba(168,85,247,0.5); }
+    .btn-operator:hover { background: rgba(168,85,247,0.55); }
+    .btn-function { background: rgba(251,191,36,0.25); color: #fcd34d; border: 1px solid rgba(251,191,36,0.35); }
+    .btn-function:hover { background: rgba(251,191,36,0.35); }
+    .btn-clear { background: rgba(248,113,113,0.25); color: #fca5a5; border: 1px solid rgba(248,113,113,0.35); }
+    .btn-clear:hover { background: rgba(248,113,113,0.35); }
+    .btn-equal { background: rgba(74,222,128,0.3); color: #86efac; border: 1px solid rgba(74,222,128,0.4); }
+    .btn-equal:hover { background: rgba(74,222,128,0.4); }
+    .btn-zero { grid-column: span 2; }
 
-    .btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    /* 数字按钮 */
-    .btn-number {
-      background: #f5f7fa;
-      color: #333;
-    }
-
-    .btn-number:hover {
-      background: #e8eaed;
-    }
-
-    /* 运算符按钮 */
-    .btn-operator {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
-    }
-
-    .btn-operator:hover {
-      box-shadow: 0 6px 16px rgba(245, 87, 108, 0.4);
-    }
-
-    /* 功能按钮 */
-    .btn-function {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .btn-function:hover {
-      background: #ffe69c;
-    }
-
-    /* 清除按钮 */
-    .btn-clear {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .btn-clear:hover {
-      background: #f5c6cb;
-    }
-
-    /* 等号按钮 */
-    .btn-equal {
-      background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(136, 216, 176, 0.3);
-    }
-
-    .btn-equal:hover {
-      box-shadow: 0 6px 16px rgba(136, 216, 176, 0.4);
-    }
-
-    /* 零按钮跨两列 */
-    .btn-zero {
-      grid-column: span 2;
-    }
-
-    /* 历史记录区 */
+    /* 历史 */
     .history-panel {
-      width: 250px;
-      background: #fafbfc;
-      border: 2px solid #e8eaed;
-      border-radius: 12px;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
+      width: 220px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); padding: 14px;
+      display: flex; flex-direction: column;
     }
-
-    .history-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #666;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #e8eaed;
-    }
-
-    .history-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
+    .history-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; color: rgba(255,255,255,0.7); }
+    .history-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .history-list::-webkit-scrollbar { width: 4px; }
+    .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
     .history-item {
-      padding: 10px;
-      background: white;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
+      padding: 8px 10px; background: rgba(255,255,255,0.08); border-radius: 8px;
+      cursor: pointer; transition: all 0.2s;
     }
-
-    .history-item:hover {
-      background: #f0f0f0;
-    }
-
-    .history-expr {
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 4px;
-    }
-
-    .history-result {
-      font-size: 16px;
-      font-weight: 600;
-      color: #333;
-      font-family: 'Courier New', monospace;
-    }
-
-    .history-empty {
-      text-align: center;
-      color: #999;
-      font-size: 14px;
-      padding: 40px 0;
-    }
-
+    .history-item:hover { background: rgba(255,255,255,0.15); }
+    .history-expr { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
+    .history-result { font-size: 15px; font-weight: 600; font-family: 'Courier New', monospace; }
+    .history-empty { text-align: center; color: rgba(255,255,255,0.4); font-size: 13px; padding: 30px 0; }
     .clear-history {
-      margin-top: 10px;
-      padding: 10px;
-      border: none;
-      background: #f0f0f0;
-      border-radius: 8px;
-      color: #666;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
+      margin-top: 8px; padding: 8px; border: none;
+      background: rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.6);
+      font-size: 12px; cursor: pointer; transition: all 0.2s;
     }
+    .clear-history:hover { background: rgba(255,255,255,0.2); }
 
-    .clear-history:hover {
-      background: #e0e0e0;
+    .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 15px; margin-top: 12px;
+      background: rgba(0,0,0,0.2); border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.6);
     }
-
-    /* 隐藏 */
-    .hidden {
-      display: none !important;
-    }
+    .footer-left { display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 7px; height: 7px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- 顶部标题栏 -->
     <div class="header">
-      <div class="header-left">
-        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
-        <span class="header-icon">🔢</span>
-        <span class="header-title">计算器</span>
-      </div>
-      <button class="history-toggle" id="historyToggle">📜 历史记录</button>
+      <h1>
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        🔢 計算器
+      </h1>
+      <button class="history-toggle" id="historyToggle">📜 歷史記錄</button>
     </div>
 
-    <!-- 主内容区 -->
-    <div class="main-content">
-      <!-- 计算器主体 -->
+    <div class="main">
       <div class="calculator">
-        <!-- 显示屏 -->
         <div class="display">
           <div class="display-expression" id="expression"></div>
           <div class="display-result" id="result">0</div>
         </div>
-
-        <!-- 按钮网格 -->
         <div class="buttons">
-          <!-- 第一行 -->
           <button class="btn btn-clear" data-action="clear">AC</button>
           <button class="btn btn-function" data-action="delete">⌫</button>
           <button class="btn btn-operator" data-action="operator" data-value="/">÷</button>
           <button class="btn btn-operator" data-action="operator" data-value="*">×</button>
-
-          <!-- 第二行 -->
           <button class="btn btn-number" data-action="number" data-value="7">7</button>
           <button class="btn btn-number" data-action="number" data-value="8">8</button>
           <button class="btn btn-number" data-action="number" data-value="9">9</button>
           <button class="btn btn-operator" data-action="operator" data-value="-">−</button>
-
-          <!-- 第三行 -->
           <button class="btn btn-number" data-action="number" data-value="4">4</button>
           <button class="btn btn-number" data-action="number" data-value="5">5</button>
           <button class="btn btn-number" data-action="number" data-value="6">6</button>
           <button class="btn btn-operator" data-action="operator" data-value="+">+</button>
-
-          <!-- 第四行 -->
           <button class="btn btn-number" data-action="number" data-value="1">1</button>
           <button class="btn btn-number" data-action="number" data-value="2">2</button>
           <button class="btn btn-number" data-action="number" data-value="3">3</button>
           <button class="btn btn-equal" data-action="calculate">=</button>
-
-          <!-- 第五行 -->
           <button class="btn btn-number btn-zero" data-action="number" data-value="0">0</button>
           <button class="btn btn-number" data-action="decimal" data-value=".">.</button>
           <button class="btn btn-function" data-action="percent">%</button>
         </div>
       </div>
 
-      <!-- 历史记录面板 -->
       <div class="history-panel hidden" id="historyPanel">
-        <div class="history-title">📜 计算历史</div>
-        <div class="history-list" id="historyList">
-          <div class="history-empty">暂无记录</div>
-        </div>
-        <button class="clear-history hidden" id="clearHistory">清空历史</button>
+        <div class="history-title">📜 計算歷史</div>
+        <div class="history-list" id="historyList"><div class="history-empty">暫無記錄</div></div>
+        <button class="clear-history hidden" id="clearHistory">清空歷史</button>
       </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-left"><div class="status-dot"></div><span>Echo AI 驅動</span></div>
+      <div id="clock"></div>
     </div>
   </div>
 
   <script>
-    // 状态变量
-    let currentValue = '0';
-    let previousValue = '';
-    let operator = '';
-    let shouldResetScreen = false;
-    let history = [];
+    let currentValue='0',previousValue='',operator='',shouldResetScreen=false,history=[];
+    const expressionEl=document.getElementById('expression'),resultEl=document.getElementById('result'),
+      historyPanel=document.getElementById('historyPanel'),historyList=document.getElementById('historyList'),
+      clearHistoryBtn=document.getElementById('clearHistory');
+    const opSymbols={'+':'+','-':'−','*':'×','/':'÷'};
 
-    // DOM 元素
-    const expressionEl = document.getElementById('expression');
-    const resultEl = document.getElementById('result');
-    const historyPanel = document.getElementById('historyPanel');
-    const historyList = document.getElementById('historyList');
-    const historyToggle = document.getElementById('historyToggle');
-    const clearHistoryBtn = document.getElementById('clearHistory');
-
-    // 播放音效
-    function playSound(type) {
-      try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        if (type === 'number') {
-          // 数字键：短促的"滴"声
-          oscillator.frequency.value = 800;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.05);
-        } else if (type === 'operator') {
-          // 运算符：稍低的"咚"声
-          oscillator.frequency.value = 600;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.08);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.08);
-        } else if (type === 'equal') {
-          // 等号：清脆的"叮"声
-          oscillator.frequency.value = 1200;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.15);
-        } else if (type === 'clear') {
-          // 清除：低沉的"嗡"声
-          oscillator.frequency.value = 400;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.1);
-        }
-      } catch (e) {
-        // 音频播放失败时静默处理
-      }
+    function updateDisplay(){
+      resultEl.textContent=currentValue;
+      expressionEl.textContent=previousValue&&operator?`${previousValue} ${opSymbols[operator]||operator}`:'';
     }
-
-    // 更新显示
-    function updateDisplay() {
-      resultEl.textContent = currentValue;
-      if (previousValue && operator) {
-        expressionEl.textContent = `${previousValue} ${getOperatorSymbol(operator)}`;
-      } else {
-        expressionEl.textContent = '';
-      }
+    function appendNumber(n){if(shouldResetScreen){currentValue=n;shouldResetScreen=false;}else{currentValue=currentValue==='0'?n:currentValue+n;}updateDisplay();}
+    function appendDecimal(){if(shouldResetScreen){currentValue='0.';shouldResetScreen=false;}else if(!currentValue.includes('.')){currentValue+='.';}updateDisplay();}
+    function chooseOperator(op){if(operator!==''&&!shouldResetScreen)calculate();previousValue=currentValue;operator=op;shouldResetScreen=true;updateDisplay();}
+    function calculate(){
+      if(operator===''||previousValue==='')return;
+      const p=parseFloat(previousValue),c=parseFloat(currentValue);let r;
+      switch(operator){case'+':r=p+c;break;case'-':r=p-c;break;case'*':r=p*c;break;case'/':r=c===0?'Error':p/c;break;default:return;}
+      addToHistory(`${previousValue} ${opSymbols[operator]} ${currentValue}`,r);
+      currentValue=r.toString();operator='';previousValue='';shouldResetScreen=true;updateDisplay();
     }
-
-    // 获取运算符符号
-    function getOperatorSymbol(op) {
-      const symbols = {
-        '+': '+',
-        '-': '−',
-        '*': '×',
-        '/': '÷'
-      };
-      return symbols[op] || op;
-    }
-
-    // 添加数字
-    function appendNumber(number) {
-      if (shouldResetScreen) {
-        currentValue = number;
-        shouldResetScreen = false;
-      } else {
-        currentValue = currentValue === '0' ? number : currentValue + number;
-      }
-      updateDisplay();
-    }
-
-    // 添加小数点
-    function appendDecimal() {
-      if (shouldResetScreen) {
-        currentValue = '0.';
-        shouldResetScreen = false;
-      } else if (!currentValue.includes('.')) {
-        currentValue += '.';
-      }
-      updateDisplay();
-    }
-
-    // 选择运算符
-    function chooseOperator(op) {
-      if (operator !== '' && !shouldResetScreen) {
-        calculate();
-      }
-      previousValue = currentValue;
-      operator = op;
-      shouldResetScreen = true;
-      updateDisplay();
-    }
-
-    // 计算
-    function calculate() {
-      if (operator === '' || previousValue === '') return;
-
-      const prev = parseFloat(previousValue);
-      const current = parseFloat(currentValue);
-      let result;
-
-      switch (operator) {
-        case '+':
-          result = prev + current;
-          break;
-        case '-':
-          result = prev - current;
-          break;
-        case '*':
-          result = prev * current;
-          break;
-        case '/':
-          if (current === 0) {
-            result = 'Error';
-          } else {
-            result = prev / current;
-          }
-          break;
-        default:
-          return;
-      }
-
-      // 添加到历史
-      addToHistory(`${previousValue} ${getOperatorSymbol(operator)} ${currentValue}`, result);
-
-      currentValue = result.toString();
-      operator = '';
-      previousValue = '';
-      shouldResetScreen = true;
-      updateDisplay();
-    }
-
-    // 清除
-    function clear() {
-      currentValue = '0';
-      previousValue = '';
-      operator = '';
-      shouldResetScreen = false;
-      updateDisplay();
-    }
-
-    // 删除
-    function deleteLast() {
-      if (currentValue.length === 1 || (currentValue.length === 2 && currentValue[0] === '-')) {
-        currentValue = '0';
-      } else {
-        currentValue = currentValue.slice(0, -1);
-      }
-      updateDisplay();
-    }
-
-    // 百分比
-    function percent() {
-      currentValue = (parseFloat(currentValue) / 100).toString();
-      updateDisplay();
-    }
-
-    // 添加到历史
-    function addToHistory(expr, result) {
-      if (result === 'Error') return;
-      
-      history.unshift({ expr, result: result.toString() });
-      if (history.length > 20) {
-        history.pop();
-      }
-      updateHistoryDisplay();
-    }
-
-    // 更新历史显示
-    function updateHistoryDisplay() {
-      if (history.length === 0) {
-        historyList.innerHTML = '<div class="history-empty">暂无记录</div>';
-        clearHistoryBtn.classList.add('hidden');
-        return;
-      }
-
-      historyList.innerHTML = history.map((item, index) => `
-        <div class="history-item" data-index="${index}">
-          <div class="history-expr">${item.expr} =</div>
-          <div class="history-result">${item.result}</div>
-        </div>
-      `).join('');
-
+    function clear(){currentValue='0';previousValue='';operator='';shouldResetScreen=false;updateDisplay();}
+    function deleteLast(){currentValue=currentValue.length===1?'0':currentValue.slice(0,-1);updateDisplay();}
+    function percent(){currentValue=(parseFloat(currentValue)/100).toString();updateDisplay();}
+    function addToHistory(expr,result){if(result==='Error')return;history.unshift({expr,result:result.toString()});if(history.length>20)history.pop();updateHistoryDisplay();}
+    function updateHistoryDisplay(){
+      if(!history.length){historyList.innerHTML='<div class="history-empty">暫無記錄</div>';clearHistoryBtn.classList.add('hidden');return;}
+      historyList.innerHTML=history.map((item,i)=>`<div class="history-item" data-index="${i}"><div class="history-expr">${item.expr} =</div><div class="history-result">${item.result}</div></div>`).join('');
       clearHistoryBtn.classList.remove('hidden');
-
-      // 点击历史记录加载
-      historyList.querySelectorAll('.history-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const index = parseInt(item.dataset.index);
-          currentValue = history[index].result;
-          shouldResetScreen = true;
-          updateDisplay();
-        });
-      });
+      historyList.querySelectorAll('.history-item').forEach(el=>{el.addEventListener('click',()=>{currentValue=history[parseInt(el.dataset.index)].result;shouldResetScreen=true;updateDisplay();});});
     }
 
-    // 清空历史
-    function clearHistory() {
-      history = [];
-      updateHistoryDisplay();
-    }
+    document.querySelectorAll('.btn').forEach(btn=>{btn.addEventListener('click',()=>{
+      const a=btn.dataset.action,v=btn.dataset.value;
+      switch(a){case'number':appendNumber(v);break;case'operator':chooseOperator(v);break;case'decimal':appendDecimal();break;case'calculate':calculate();break;case'clear':clear();break;case'delete':deleteLast();break;case'percent':percent();break;}
+    });});
+    document.getElementById('historyToggle').addEventListener('click',()=>historyPanel.classList.toggle('hidden'));
+    document.getElementById('clearHistory').addEventListener('click',()=>{history=[];updateHistoryDisplay();});
+    document.addEventListener('keydown',e=>{if(e.key>='0'&&e.key<='9')appendNumber(e.key);else if(e.key==='.')appendDecimal();else if('+-*/'.includes(e.key))chooseOperator(e.key);else if(e.key==='Enter'||e.key==='=')calculate();else if(e.key==='Escape')clear();else if(e.key==='Backspace')deleteLast();else if(e.key==='%')percent();});
 
-    // 切换历史面板
-    function toggleHistory() {
-      historyPanel.classList.toggle('hidden');
-    }
-
-    // 事件监听
-    document.querySelectorAll('.btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const action = btn.dataset.action;
-        const value = btn.dataset.value;
-
-        switch (action) {
-          case 'number':
-            playSound('number');
-            appendNumber(value);
-            break;
-          case 'operator':
-            playSound('operator');
-            chooseOperator(value);
-            break;
-          case 'decimal':
-            playSound('number');
-            appendDecimal();
-            break;
-          case 'calculate':
-            playSound('equal');
-            calculate();
-            break;
-          case 'clear':
-            playSound('clear');
-            clear();
-            break;
-          case 'delete':
-            playSound('clear');
-            deleteLast();
-            break;
-          case 'percent':
-            playSound('operator');
-            percent();
-            break;
-        }
-      });
-    });
-
-    historyToggle.addEventListener('click', toggleHistory);
-    clearHistoryBtn.addEventListener('click', clearHistory);
-
-    // 键盘支持
-    document.addEventListener('keydown', (e) => {
-      if (e.key >= '0' && e.key <= '9') {
-        appendNumber(e.key);
-      } else if (e.key === '.') {
-        appendDecimal();
-      } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
-        chooseOperator(e.key);
-      } else if (e.key === 'Enter' || e.key === '=') {
-        calculate();
-      } else if (e.key === 'Escape') {
-        clear();
-      } else if (e.key === 'Backspace') {
-        deleteLast();
-      } else if (e.key === '%') {
-        percent();
-      }
-    });
-
-    // 初始化
-    updateDisplay();
+    function updateClock(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});}
+    updateClock();setInterval(updateClock,1000);updateDisplay();
   </script>
 </body>
 </html>
