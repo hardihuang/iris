@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=800, height=480">
+  <title>🌍 世界地圖 - Echo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      width: 800px; height: 480px; overflow: hidden;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #a855f7 100%);
+      color: #fff;
+    }
+    .container { width: 100%; height: 100%; padding: 10px 14px; display: flex; flex-direction: column; }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 12px; margin-bottom: 8px;
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+    }
+    .header-left { display: flex; align-items: center; gap: 8px; }
+    .home-btn {
+      color: #fff; text-decoration: none; font-size: 16px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 6px;
+      background: rgba(255,255,255,0.15); transition: background 0.2s;
+    }
+    .home-btn:hover { background: rgba(255,255,255,0.25); }
+    .app-title { font-size: 15px; font-weight: 700; }
+    .header-right { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+    .main { flex: 1; display: flex; gap: 10px; overflow: hidden; }
+
+    /* 地圖區 */
+    .map-section {
+      flex: 1; background: rgba(0,0,0,0.2); border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1); overflow: hidden;
+      position: relative; cursor: crosshair;
+    }
+    #mapCanvas { width: 100%; height: 100%; }
+
+    .coord-display {
+      position: absolute; bottom: 6px; left: 8px;
+      font-size: 10px; color: rgba(255,255,255,0.4);
+      font-family: 'Courier New', monospace;
+    }
+
+    /* 信息面板 */
+    .info-panel {
+      width: 220px; display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .country-card {
+      background: rgba(255,255,255,0.08); backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+      padding: 14px; flex: 1; display: flex; flex-direction: column;
+    }
+    .country-flag { font-size: 36px; text-align: center; margin-bottom: 8px; }
+    .country-name { font-size: 18px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+    .country-native { font-size: 12px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 10px; }
+
+    .info-grid { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .info-row {
+      display: flex; justify-content: space-between; padding: 5px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 12px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: rgba(255,255,255,0.5); }
+    .info-value { font-weight: 600; color: #e9d5ff; text-align: right; max-width: 120px; }
+
+    .country-desc {
+      margin-top: 8px; font-size: 11px; color: rgba(255,255,255,0.7);
+      line-height: 1.6; flex: 1; overflow-y: auto;
+    }
+    .country-desc::-webkit-scrollbar { width: 3px; }
+    .country-desc::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; gap: 10px;
+      color: rgba(255,255,255,0.4); font-size: 13px;
+    }
+    .empty-icon { font-size: 40px; }
+
+    /* 搜索 */
+    .search-box {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; padding: 8px 10px;
+    }
+    .search-input {
+      width: 100%; background: none; border: none; outline: none;
+      color: #fff; font-size: 12px;
+    }
+    .search-input::placeholder { color: rgba(255,255,255,0.35); }
+
+    .footer {
+      margin-top: 8px; padding: 5px 12px;
+      background: rgba(0,0,0,0.2); border-radius: 8px;
+      font-size: 11px; color: rgba(255,255,255,0.5);
+      display: flex; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="home-btn" title="返回桌面">🏠</a>
+        <div class="app-title">🌍 世界地圖</div>
+      </div>
+      <div class="header-right">點擊國家查看介紹</div>
+    </div>
+
+    <div class="main">
+      <div class="map-section">
+        <canvas id="mapCanvas"></canvas>
+        <div class="coord-display" id="coordDisplay"></div>
+      </div>
+
+      <div class="info-panel">
+        <div class="search-box">
+          <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索國家..." oninput="searchCountry(this.value)">
+        </div>
+        <div class="country-card" id="countryCard">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-icon">🌏</div>
+            <div>點擊地圖上的國家</div>
+            <div>查看詳細介紹</div>
+          </div>
+          <div id="countryInfo" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Echo AI · 共收錄 50+ 個國家和地區</span>
+      <span id="clock"></span>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    let hoveredCountry = null;
+    let selectedCountry = null;
+
+    function resize() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      W = canvas.width = rect.width;
+      H = canvas.height = rect.height;
+    }
+    resize();
+
+    // 經緯度 → 像素
+    function lonToX(lon) { return (lon + 180) / 360 * W; }
+    function latToY(lat) {
+      // 簡單 Mercator 近似
+      const latRad = lat * Math.PI / 180;
+      const mercN = Math.log(Math.tan(Math.PI/4 + latRad/2));
+      const yNorm = 0.5 - mercN / (2 * Math.PI);
+      return yNorm * H * 1.8 - H * 0.15;
+    }
+    function xToLon(x) { return x / W * 360 - 180; }
+    function yToLat(y) {
+      const yNorm = (y + H * 0.15) / (H * 1.8);
+      const mercN = (0.5 - yNorm) * 2 * Math.PI;
+      return (Math.atan(Math.exp(mercN)) - Math.PI/4) * 2 * 180 / Math.PI;
+    }
+
+    // ─── 國家數據 ───
+    const countries = [
+      // 東亞
+      { id:'CN', flag:'🇨🇳', name:'中國', native:'China', capital:'北京', pop:'14.1 億', area:'960 萬 km²', lang:'中文', currency:'人民幣 ¥',
+        desc:'世界人口最多的國家，擁有五千年文明史。長城、故宮、兵馬俑等世界文化遺產聞名遐邇。是全球第二大經濟體，在科技、航天等領域快速發展。',
+        poly:[[73,40],[135,40],[135,18],[108,18],[100,22],[73,35]] },
+      { id:'JP', flag:'🇯🇵', name:'日本', native:'Japan', capital:'東京', pop:'1.26 億', area:'37.8 萬 km²', lang:'日語', currency:'日圓 ¥',
+        desc:'太平洋上的島國，以科技創新和傳統文化的完美融合聞名。壽司、動漫、櫻花和富士山是其標誌性符號。',
+        poly:[[130,31],[132,31],[134,34],[140,40],[141,43],[138,38],[131,33]] },
+      { id:'KR', flag:'🇰🇷', name:'韓國', native:'South Korea', capital:'首爾', pop:'5180 萬', area:'10 萬 km²', lang:'韓語', currency:'韓圓 ₩',
+        desc:'朝鮮半島南部國家，K-pop、韓劇風靡全球。三星、現代等品牌享譽世界，泡菜文化已列入非物質文化遺產。',
+        poly:[[126,34],[129,34],[130,37],[127,38],[126,36]] },
+      { id:'TW', flag:'🇹🇼', name:'台灣', native:'Taiwan', capital:'台北', pop:'2380 萬', area:'3.6 萬 km²', lang:'中文', currency:'新台幣 NT$',
+        desc:'位於西太平洋的寶島，夜市美食聞名世界。半導體產業全球領先，台積電為全球最大晶片代工廠。',
+        poly:[[120,22],[122,22],[122,25],[120,25]] },
+      { id:'MN', flag:'🇲🇳', name:'蒙古', native:'Mongolia', capital:'烏蘭巴托', pop:'330 萬', area:'156 萬 km²', lang:'蒙古語', currency:'圖格里克',
+        desc:'內陸國家，擁有廣袤的草原和戈壁沙漠。成吉思汗的故鄉，遊牧文化保存完好。',
+        poly:[[88,42],[119,42],[119,52],[88,52]] },
+
+      // 東南亞
+      { id:'TH', flag:'🇹🇭', name:'泰國', native:'Thailand', capital:'曼谷', pop:'7000 萬', area:'51.3 萬 km²', lang:'泰語', currency:'泰銖 ฿',
+        desc:'微笑之國，以寺廟、美食和熱帶海灘著稱。曼谷是全球最受歡迎的旅遊城市之一。',
+        poly:[[98,6],[106,6],[106,20],[100,20],[98,14]] },
+      { id:'VN', flag:'🇻🇳', name:'越南', native:'Vietnam', capital:'河內', pop:'9800 萬', area:'33.1 萬 km²', lang:'越南語', currency:'越南盾 ₫',
+        desc:'東南亞的S形國度，以下龍灣、河粉和咖啡聞名。經濟快速增長的新興市場。',
+        poly:[[103,8],[109,8],[109,23],[105,22],[103,12]] },
+      { id:'SG', flag:'🇸🇬', name:'新加坡', native:'Singapore', capital:'新加坡', pop:'590 萬', area:'728 km²', lang:'英語/中文', currency:'新幣 S$',
+        desc:'東南亞城市國家，全球金融中心之一。以高效治理、整潔環境和多元文化著稱。魚尾獅是國家象徵。',
+        poly:[[103.6,1],[104.1,1],[104.1,1.5],[103.6,1.5]] },
+
+      // 南亞
+      { id:'IN', flag:'🇮🇳', name:'印度', native:'India', capital:'新德里', pop:'14.2 億', area:'329 萬 km²', lang:'印地語/英語', currency:'盧比 ₹',
+        desc:'世界人口最多的國家，文明古國之一。泰姬瑪哈陵舉世聞名，IT產業和寶萊塢電影享譽全球。',
+        poly:[[68,8],[88,8],[92,22],[88,28],[80,35],[72,35],[68,23]] },
+
+      // 中亞/西亞
+      { id:'SA', flag:'🇸🇦', name:'沙烏地阿拉伯', native:'Saudi Arabia', capital:'利雅德', pop:'3500 萬', area:'215 萬 km²', lang:'阿拉伯語', currency:'里亞爾',
+        desc:'伊斯蘭教兩大聖城麥加和麥地那所在地。世界最大石油出口國，正推動「2030 願景」經濟轉型。',
+        poly:[[35,16],[55,16],[55,32],[40,32],[35,28]] },
+      { id:'TR', flag:'🇹🇷', name:'土耳其', native:'Türkiye', capital:'安卡拉', pop:'8500 萬', area:'78.4 萬 km²', lang:'土耳其語', currency:'里拉 ₺',
+        desc:'橫跨歐亞的國家，伊斯坦布爾是唯一跨兩洲的城市。擁有豐富的歷史遺跡和獨特美食文化。',
+        poly:[[26,36],[44,36],[44,42],[26,42]] },
+      { id:'IL', flag:'🇮🇱', name:'以色列', native:'Israel', capital:'耶路撒冷', pop:'930 萬', area:'2.2 萬 km²', lang:'希伯來語', currency:'謝克爾 ₪',
+        desc:'中東的科技強國，被稱為「創業之國」。耶路撒冷是三大宗教聖地，死海是地球最低點。',
+        poly:[[34,29],[36,29],[36,33],[34,33]] },
+
+      // 歐洲
+      { id:'GB', flag:'🇬🇧', name:'英國', native:'United Kingdom', capital:'倫敦', pop:'6700 萬', area:'24.3 萬 km²', lang:'英語', currency:'英鎊 £',
+        desc:'曾經的日不落帝國，現代民主制度的發源地。倫敦是全球金融中心，莎士比亞和披頭四的故鄉。',
+        poly:[[-8,50],[2,50],[2,59],[-8,59]] },
+      { id:'FR', flag:'🇫🇷', name:'法國', native:'France', capital:'巴黎', pop:'6700 萬', area:'64.1 萬 km²', lang:'法語', currency:'歐元 €',
+        desc:'浪漫之都巴黎擁有艾菲爾鐵塔和盧浮宮。法國美食和葡萄酒享譽世界，時尚之都引領全球潮流。',
+        poly:[[-5,43],[8,43],[8,51],[-5,51]] },
+      { id:'DE', flag:'🇩🇪', name:'德國', native:'Germany', capital:'柏林', pop:'8300 萬', area:'35.7 萬 km²', lang:'德語', currency:'歐元 €',
+        desc:'歐洲最大經濟體，以精密工程和汽車工業著稱。BMW、奔馳、大眾的故鄉，啤酒節是其文化名片。',
+        poly:[[6,47],[15,47],[15,55],[6,55]] },
+      { id:'IT', flag:'🇮🇹', name:'義大利', native:'Italy', capital:'羅馬', pop:'5900 萬', area:'30.1 萬 km²', lang:'義大利語', currency:'歐元 €',
+        desc:'文藝復興的搖籃，擁有世界最多的世界遺產。比薩斜塔、羅馬競技場、威尼斯水城舉世聞名。披薩和義大利麵征服了全世界的味蕾。',
+        poly:[[7,37],[18,37],[18,47],[7,47]] },
+      { id:'ES', flag:'🇪🇸', name:'西班牙', native:'Spain', capital:'馬德里', pop:'4700 萬', area:'50.6 萬 km²', lang:'西班牙語', currency:'歐元 €',
+        desc:'鬥牛、弗拉明戈和高迪建築的國度。巴塞隆納的聖家堂是建築奇蹟，西班牙海鮮飯聞名遐邇。',
+        poly:[[-10,36],[3,36],[3,44],[-10,44]] },
+      { id:'RU', flag:'🇷🇺', name:'俄羅斯', native:'Russia', capital:'莫斯科', pop:'1.44 億', area:'1710 萬 km²', lang:'俄語', currency:'盧布 ₽',
+        desc:'世界面積最大的國家，橫跨歐亞兩洲。克里姆林宮、冬宮和西伯利亞鐵路是其標誌。擁有豐富的自然資源和深厚的文學藝術傳統。',
+        poly:[[28,42],[180,42],[180,72],[28,72]] },
+      { id:'UA', flag:'🇺🇦', name:'烏克蘭', native:'Ukraine', capital:'基輔', pop:'4400 萬', area:'60.4 萬 km²', lang:'烏克蘭語', currency:'格里夫納',
+        desc:'歐洲面積第二大國家，被稱為「歐洲糧倉」。擁有肥沃的黑土地，基輔是歐洲最古老的城市之一。',
+        poly:[[22,44],[40,44],[40,52],[22,52]] },
+      { id:'PL', flag:'🇵🇱', name:'波蘭', native:'Poland', capital:'華沙', pop:'3800 萬', area:'31.3 萬 km²', lang:'波蘭語', currency:'茲羅提',
+        desc:'中歐國家，蕭邦和居里夫人的故鄉。華沙古城在二戰後完整重建，克拉科夫是歐洲最美城市之一。',
+        poly:[[14,49],[24,49],[24,55],[14,55]] },
+      { id:'SE', flag:'🇸🇪', name:'瑞典', native:'Sweden', capital:'斯德哥爾摩', pop:'1050 萬', area:'45 萬 km²', lang:'瑞典語', currency:'克朗',
+        desc:'北歐最大國家，以高福利和創新著稱。IKEA、Spotify、Volvo 的誕生地，諾貝爾獎的頒發國。',
+        poly:[[11,55],[24,55],[24,69],[11,69]] },
+      { id:'CH', flag:'🇨🇭', name:'瑞士', native:'Switzerland', capital:'伯恩', pop:'870 萬', area:'4.1 萬 km²', lang:'德/法/意/羅', currency:'瑞士法郎',
+        desc:'永久中立國，阿爾卑斯山的心臟。以精密鐘錶、巧克力、銀行業和壯麗山景聞名於世。',
+        poly:[[6,45.5],[10.5,45.5],[10.5,48],[6,48]] },
+      { id:'NL', flag:'🇳🇱', name:'荷蘭', native:'Netherlands', capital:'阿姆斯特丹', pop:'1750 萬', area:'4.2 萬 km²', lang:'荷蘭語', currency:'歐元 €',
+        desc:'風車和鬱金香的國度，大部分國土低於海平面。阿姆斯特丹的運河和博物館享譽世界。',
+        poly:[[3,51],[7,51],[7,54],[3,54]] },
+      { id:'NO', flag:'🇳🇴', name:'挪威', native:'Norway', capital:'奧斯陸', pop:'540 萬', area:'38.5 萬 km²', lang:'挪威語', currency:'克朗',
+        desc:'峽灣之國，北極光的最佳觀賞地。全球最富裕國家之一，連續多年被評為最宜居國家。',
+        poly:[[4,58],[16,58],[30,70],[16,72],[4,65]] },
+      { id:'GR', flag:'🇬🇷', name:'希臘', native:'Greece', capital:'雅典', pop:'1070 萬', area:'13.2 萬 km²', lang:'希臘語', currency:'歐元 €',
+        desc:'西方文明的搖籃，民主制度的發源地。帕特農神殿、奧林匹克運動會和希臘神話影響深遠。',
+        poly:[[20,35],[28,35],[28,42],[20,42]] },
+
+      // 北美
+      { id:'US', flag:'🇺🇸', name:'美國', native:'United States', capital:'華盛頓', pop:'3.3 億', area:'983 萬 km²', lang:'英語', currency:'美元 $',
+        desc:'世界第一大經濟體和軍事強國。矽谷引領科技創新，好萊塢主導全球娛樂。自由女神像和大峽谷是其標誌。',
+        poly:[[-125,25],[-66,25],[-66,49],[-125,49]] },
+      { id:'CA', flag:'🇨🇦', name:'加拿大', native:'Canada', capital:'渥太華', pop:'3800 萬', area:'998 萬 km²', lang:'英語/法語', currency:'加元 C$',
+        desc:'世界面積第二大國家，以壯麗自然風光聞名。尼亞加拉大瀑布、洛磯山脈和楓葉是其象徵。多元文化社會的典範。',
+        poly:[[-141,49],[-52,49],[-52,72],[-141,72]] },
+      { id:'MX', flag:'🇲🇽', name:'墨西哥', native:'Mexico', capital:'墨西哥城', pop:'1.3 億', area:'196 萬 km²', lang:'西班牙語', currency:'比索',
+        desc:'古代馬雅和阿茲特克文明的所在地。以美食（塔可、辣椒）、亡靈節和金字塔聞名於世。',
+        poly:[[-118,15],[-87,15],[-87,33],[-118,33]] },
+
+      // 南美
+      { id:'BR', flag:'🇧🇷', name:'巴西', native:'Brazil', capital:'巴西利亞', pop:'2.1 億', area:'851 萬 km²', lang:'葡萄牙語', currency:'雷亞爾 R$',
+        desc:'南美最大國家，足球王國。亞馬遜雨林是地球之肺，里約嘉年華是世界最大的狂歡節。基督像俯瞰里約。',
+        poly:[[-74,-33],[-35,-33],[-35,5],[-74,5]] },
+      { id:'AR', flag:'🇦🇷', name:'阿根廷', native:'Argentina', capital:'布宜諾斯艾利斯', pop:'4500 萬', area:'278 萬 km²', lang:'西班牙語', currency:'比索',
+        desc:'探戈的故鄉，足球巨星梅西的祖國。巴塔哥尼亞冰川壯麗，阿根廷牛排享譽全球。',
+        poly:[[-74,-55],[-54,-55],[-54,-22],[-74,-22]] },
+      { id:'CL', flag:'🇨🇱', name:'智利', native:'Chile', capital:'聖地亞哥', pop:'1900 萬', area:'75.6 萬 km²', lang:'西班牙語', currency:'比索',
+        desc:'世界最狹長的國家，南北跨越 4300 公里。阿塔卡馬沙漠是地球最乾燥的地方，復活節島充滿神秘。',
+        poly:[[-76,-56],[-66,-56],[-66,-18],[-76,-18]] },
+      { id:'PE', flag:'🇵🇪', name:'秘魯', native:'Peru', capital:'利馬', pop:'3300 萬', area:'128.5 萬 km²', lang:'西班牙語', currency:'索爾',
+        desc:'印加帝國的核心地帶，馬丘比丘是世界新七大奇蹟之一。秘魯美食被評為南美最佳。',
+        poly:[[-81,-18],[-69,-18],[-69,0],[-81,0]] },
+      { id:'CO', flag:'🇨🇴', name:'哥倫比亞', native:'Colombia', capital:'波哥大', pop:'5100 萬', area:'114 萬 km²', lang:'西班牙語', currency:'比索',
+        desc:'南美洲西北部國家，咖啡產量世界第三。擁有加勒比海岸和安第斯山脈的多樣地理環境。',
+        poly:[[-79,-4],[-67,-4],[-67,12],[-79,12]] },
+
+      // 非洲
+      { id:'EG', flag:'🇪🇬', name:'埃及', native:'Egypt', capital:'開羅', pop:'1.04 億', area:'100 萬 km²', lang:'阿拉伯語', currency:'埃及鎊',
+        desc:'四大文明古國之一，金字塔和獅身人面像舉世聞名。尼羅河孕育了燦爛的古埃及文明，已有五千年歷史。',
+        poly:[[25,22],[35,22],[35,32],[25,32]] },
+      { id:'ZA', flag:'🇿🇦', name:'南非', native:'South Africa', capital:'比勒陀利亞', pop:'6000 萬', area:'122 萬 km²', lang:'英語等 11 種', currency:'蘭特 R',
+        desc:'彩虹之國，非洲經濟最發達的國家之一。曼德拉的故鄉，擁有好望角和克魯格國家公園。',
+        poly:[[16,-35],[33,-35],[33,-22],[16,-22]] },
+      { id:'NG', flag:'🇳🇬', name:'奈及利亞', native:'Nigeria', capital:'阿布賈', pop:'2.2 億', area:'92.4 萬 km²', lang:'英語', currency:'奈拉 ₦',
+        desc:'非洲人口最多的國家，也是非洲最大經濟體。尼萊塢電影產業產量全球第二，音樂文化影響深遠。',
+        poly:[[3,4],[14,4],[14,14],[3,14]] },
+      { id:'KE', flag:'🇰🇪', name:'肯亞', native:'Kenya', capital:'奈洛比', pop:'5400 萬', area:'58 萬 km²', lang:'英語/斯瓦希里語', currency:'先令',
+        desc:'東非明珠，世界著名的野生動物天堂。馬賽馬拉國家保護區的動物大遷徙是自然界最壯觀的景象。',
+        poly:[[34,-5],[42,-5],[42,5],[34,5]] },
+      { id:'MA', flag:'🇲🇦', name:'摩洛哥', native:'Morocco', capital:'拉巴特', pop:'3700 萬', area:'44.7 萬 km²', lang:'阿拉伯語/法語', currency:'迪拉姆',
+        desc:'北非的彩色國度，馬拉喀什的集市和撒哈拉沙漠令人著迷。藍色小鎮舍夫沙萬是網紅打卡地。',
+        poly:[[-13,28],[-1,28],[-1,36],[-13,36]] },
+
+      // 大洋洲
+      { id:'AU', flag:'🇦🇺', name:'澳洲', native:'Australia', capital:'坎培拉', pop:'2600 萬', area:'769 萬 km²', lang:'英語', currency:'澳元 A$',
+        desc:'世界上唯一佔據整個大陸的國家。雪梨歌劇院、大堡礁和袋鼠是其標誌。獨特的生態系統擁有眾多特有物種。',
+        poly:[[113,-44],[154,-44],[154,-10],[113,-10]] },
+      { id:'NZ', flag:'🇳🇿', name:'紐西蘭', native:'New Zealand', capital:'威靈頓', pop:'510 萬', area:'26.8 萬 km²', lang:'英語/毛利語', currency:'紐元 NZ$',
+        desc:'南太平洋的世外桃源，《魔戒》的拍攝地。壯麗的峽灣、冰川和火山構成了令人驚嘆的自然風光。',
+        poly:[[166,-47],[178,-47],[178,-34],[166,-34]] },
+    ];
+
+    // ─── 繪製 ───
+    function drawMap() {
+      // 背景
+      ctx.fillStyle = '#0d1030';
+      ctx.fillRect(0, 0, W, H);
+
+      // 海洋漸變
+      const oceanGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+      oceanGrad.addColorStop(0, '#151845');
+      oceanGrad.addColorStop(1, '#0a0d28');
+      ctx.fillStyle = oceanGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // 經緯線
+      ctx.strokeStyle = 'rgba(168,85,247,0.08)';
+      ctx.lineWidth = 0.5;
+      for (let lon = -180; lon <= 180; lon += 30) {
+        const x = lonToX(lon);
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
+      for (let lat = -60; lat <= 80; lat += 20) {
+        const y = latToY(lat);
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      }
+
+      // 繪製國家
+      countries.forEach(c => {
+        const pts = c.poly.map(p => [lonToX(p[0]), latToY(p[1])]);
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.closePath();
+
+        if (c === selectedCountry) {
+          ctx.fillStyle = 'rgba(74,222,128,0.5)';
+          ctx.strokeStyle = '#4ade80';
+          ctx.lineWidth = 2;
+        } else if (c === hoveredCountry) {
+          ctx.fillStyle = 'rgba(168,85,247,0.45)';
+          ctx.strokeStyle = '#a855f7';
+          ctx.lineWidth = 1.5;
+        } else {
+          ctx.fillStyle = 'rgba(168,85,247,0.25)';
+          ctx.strokeStyle = 'rgba(168,85,247,0.4)';
+          ctx.lineWidth = 0.8;
+        }
+        ctx.fill();
+        ctx.stroke();
+      });
+    }
+
+    // 點擊檢測
+    function hitTest(mx, my) {
+      for (let ci = countries.length - 1; ci >= 0; ci--) {
+        const c = countries[ci];
+        const pts = c.poly.map(p => [lonToX(p[0]), latToY(p[1])]);
+        if (pointInPoly(mx, my, pts)) return c;
+      }
+      return null;
+    }
+
+    function pointInPoly(x, y, pts) {
+      let inside = false;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      return inside;
+    }
+
+    function showCountry(c) {
+      selectedCountry = c;
+      document.getElementById('emptyState').style.display = 'none';
+      const info = document.getElementById('countryInfo');
+      info.style.display = 'block';
+      info.innerHTML = `
+        <div class="country-flag">${c.flag}</div>
+        <div class="country-name">${c.name}</div>
+        <div class="country-native">${c.native}</div>
+        <div class="info-grid">
+          <div class="info-row"><span class="info-label">首都</span><span class="info-value">${c.capital}</span></div>
+          <div class="info-row"><span class="info-label">人口</span><span class="info-value">${c.pop}</span></div>
+          <div class="info-row"><span class="info-label">面積</span><span class="info-value">${c.area}</span></div>
+          <div class="info-row"><span class="info-label">語言</span><span class="info-value">${c.lang}</span></div>
+          <div class="info-row"><span class="info-label">貨幣</span><span class="info-value">${c.currency}</span></div>
+        </div>
+        <div class="country-desc">${c.desc}</div>
+      `;
+      drawMap();
+    }
+
+    // 搜索
+    function searchCountry(q) {
+      if (!q) return;
+      q = q.toLowerCase();
+      const found = countries.find(c =>
+        c.name.includes(q) || c.native.toLowerCase().includes(q) || c.id.toLowerCase() === q
+      );
+      if (found) showCountry(found);
+    }
+
+    // 事件
+    canvas.addEventListener('click', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) / rect.width * W;
+      const my = (e.clientY - rect.top) / rect.height * H;
+      const c = hitTest(mx, my);
+      if (c) showCountry(c);
+    });
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) / rect.width * W;
+      const my = (e.clientY - rect.top) / rect.height * H;
+      const lon = xToLon(mx).toFixed(1);
+      const lat = yToLat(my).toFixed(1);
+      document.getElementById('coordDisplay').textContent = `${lat}°${lat>0?'N':'S'} ${lon}°${lon>0?'E':'W'}`;
+
+      const prev = hoveredCountry;
+      hoveredCountry = hitTest(mx, my);
+      if (hoveredCountry !== prev) drawMap();
+      canvas.style.cursor = hoveredCountry ? 'pointer' : 'crosshair';
+    });
+
+    // 時鐘
+    function updateClock() {
+      document.getElementById('clock').textContent = new Date().toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit'});
+    }
+    updateClock(); setInterval(updateClock, 1000);
+
+    // 初始化
+    drawMap();
+  </script>
+</body>
+</html>
