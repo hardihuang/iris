@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+    <title>🏎️ 3D 賽車遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 800px;
+            height: 480px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #f093fb;
+        }
+
+        #gameCanvas {
+            flex: 1;
+            width: 100%;
+            border: none;
+        }
+
+        .controls-hint {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px 50px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            display: none;
+        }
+
+        .game-over h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #f093fb;
+        }
+
+        .game-over p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <a href="https://hardihuang.github.io/iris/cyberdeck2/" class="back-btn">← 桌面</a>
+                <h1>🏎️ 3D 賽車</h1>
+            </div>
+            <div class="stats">
+                <div class="stat-item">分數: <span class="stat-value" id="score">0</span></div>
+                <div class="stat-item">速度: <span class="stat-value" id="speed">0</span> km/h</div>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="controls-hint">← → 左右移動 | ↑ 加速 | ↓ 減速</div>
+        <div class="game-over" id="gameOver">
+            <h2>遊戲結束</h2>
+            <p>最終分數: <span id="finalScore">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">重新開始</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // 遊戲變量
+        let scene, camera, renderer;
+        let car, road, roadLines = [];
+        let obstacles = [];
+        let particles = [];
+        let score = 0;
+        let speed = 0;
+        let maxSpeed = 200;
+        let acceleration = 2;
+        let deceleration = 1;
+        let steering = 0;
+        let gameRunning = true;
+        let roadSpeed = 0;
+        
+        // 輸入狀態
+        const keys = {
+            ArrowLeft: false,
+            ArrowRight: false,
+            ArrowUp: false,
+            ArrowDown: false
+        };
+
+        // 初始化
+        function init() {
+            const canvas = document.getElementById('gameCanvas');
+            const container = document.querySelector('.container');
+            
+            // 創建場景
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x667eea, 20, 100);
+            
+            // 創建相機
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / (container.clientHeight - 50), 0.1, 1000);
+            camera.position.set(0, 5, 10);
+            camera.lookAt(0, 0, -20);
+            
+            // 創建渲染器
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight - 50);
+            renderer.setClearColor(0x667eea);
+            
+            // 添加燈光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            scene.add(directionalLight);
+            
+            // 創建賽道
+            createRoad();
+            
+            // 創建賽車
+            createCar();
+            
+            // 創建粒子效果
+            createParticles();
+            
+            // 事件監聽
+            document.addEventListener('keydown', (e) => {
+                if (keys.hasOwnProperty(e.code)) keys[e.code] = true;
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (keys.hasOwnProperty(e.code)) keys[e.code] = false;
+            });
+            
+            // 開始遊戲循環
+            animate();
+            
+            // 開始生成障礙物
+            setInterval(spawnObstacle, 2000);
+        }
+
+        // 創建賽道
+        function createRoad() {
+            // 路面
+            const roadGeometry = new THREE.PlaneGeometry(20, 200);
+            const roadMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x2a2a4a,
+                shininess: 10
+            });
+            road = new THREE.Mesh(roadGeometry, roadMaterial);
+            road.rotation.x = -Math.PI / 2;
+            road.position.z = -50;
+            scene.add(road);
+            
+            // 路邊草地
+            const grassGeometry = new THREE.PlaneGeometry(100, 200);
+            const grassMaterial = new THREE.MeshPhongMaterial({ color: 0x1a1a3a });
+            const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+            grass.rotation.x = -Math.PI / 2;
+            grass.position.y = -0.1;
+            grass.position.z = -50;
+            scene.add(grass);
+            
+            // 賽道線
+            for (let i = 0; i < 20; i++) {
+                const lineGeometry = new THREE.PlaneGeometry(0.5, 5);
+                const lineMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const line = new THREE.Mesh(lineGeometry, lineMaterial);
+                line.rotation.x = -Math.PI / 2;
+                line.position.y = 0.01;
+                line.position.z = -i * 10;
+                roadLines.push(line);
+                scene.add(line);
+            }
+        }
+
+        // 創建賽車
+        function createCar() {
+            car = new THREE.Group();
+            
+            // 車身
+            const bodyGeometry = new THREE.BoxGeometry(2, 0.8, 4);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xf093fb,
+                shininess: 100,
+                emissive: 0x220044
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.6;
+            car.add(body);
+            
+            // 車頂
+            const roofGeometry = new THREE.BoxGeometry(1.6, 0.6, 2);
+            const roofMaterial = new THREE.MeshPhongMaterial({ color: 0x764ba2 });
+            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+            roof.position.y = 1.3;
+            roof.position.z = -0.3;
+            car.add(roof);
+            
+            // 車輪
+            const wheelGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x111111 });
+            
+            const wheelPositions = [
+                [-1.1, 0.4, 1.2],
+                [1.1, 0.4, 1.2],
+                [-1.1, 0.4, -1.2],
+                [1.1, 0.4, -1.2]
+            ];
+            
+            wheelPositions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(...pos);
+                car.add(wheel);
+            });
+            
+            // 尾燈
+            const tailLightGeometry = new THREE.BoxGeometry(0.4, 0.2, 0.1);
+            const tailLightMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff0044,
+                emissive: 0xff0044,
+                emissiveIntensity: 2
+            });
+            
+            const leftLight = new THREE.Mesh(tailLightGeometry, tailLightMaterial);
+            leftLight.position.set(-0.6, 0.8, -2);
+            car.add(leftLight);
+            
+            const rightLight = new THREE.Mesh(tailLightGeometry, tailLightMaterial);
+            rightLight.position.set(0.6, 0.8, -2);
+            car.add(rightLight);
+            
+            car.position.y = 0;
+            scene.add(car);
+        }
+
+        // 創建粒子效果
+        function createParticles() {
+            const particleGeometry = new THREE.BufferGeometry();
+            const particleCount = 200;
+            const positions = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 100;
+                positions[i + 1] = Math.random() * 20;
+                positions[i + 2] = -Math.random() * 100;
+            }
+            
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const particleMaterial = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.1,
+                transparent: true,
+                opacity: 0.6
+            });
+            
+            const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+            particles.push(particleSystem);
+            scene.add(particleSystem);
+        }
+
+        // 生成障礙物
+        function spawnObstacle() {
+            if (!gameRunning) return;
+            
+            const types = ['box', 'cone', 'barrier'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let obstacle;
+            const x = (Math.random() - 0.5) * 16;
+            
+            if (type === 'box') {
+                const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                const material = new THREE.MeshPhongMaterial({ color: 0xff6b6b });
+                obstacle = new THREE.Mesh(geometry, material);
+            } else if (type === 'cone') {
+                const geometry = new THREE.ConeGeometry(0.6, 1.5, 8);
+                const material = new THREE.MeshPhongMaterial({ color: 0xffa500 });
+                obstacle = new THREE.Mesh(geometry, material);
+                obstacle.position.y = 0.75;
+            } else {
+                const geometry = new THREE.BoxGeometry(3, 1, 0.5);
+                const material = new THREE.MeshPhongMaterial({ color: 0xff0044 });
+                obstacle = new THREE.Mesh(geometry, material);
+            }
+            
+            obstacle.position.x = x;
+            obstacle.position.z = -80;
+            obstacle.userData = { type: type };
+            
+            obstacles.push(obstacle);
+            scene.add(obstacle);
+        }
+
+        // 更新遊戲
+        function update() {
+            if (!gameRunning) return;
+            
+            // 控制加速/減速
+            if (keys.ArrowUp) {
+                speed = Math.min(speed + acceleration, maxSpeed);
+            } else if (keys.ArrowDown) {
+                speed = Math.max(speed - deceleration * 2, 0);
+            } else {
+                speed = Math.max(speed - deceleration, 0);
+            }
+            
+            // 控制轉向
+            if (keys.ArrowLeft) {
+                steering = Math.max(steering - 0.02, -0.3);
+                car.rotation.z = 0.1;
+            } else if (keys.ArrowRight) {
+                steering = Math.min(steering + 0.02, 0.3);
+                car.rotation.z = -0.1;
+            } else {
+                steering *= 0.9;
+                car.rotation.z *= 0.9;
+            }
+            
+            // 更新車子位置
+            car.position.x += steering * (speed / maxSpeed) * 0.5;
+            car.position.x = Math.max(-9, Math.min(9, car.position.x));
+            
+            // 更新賽道線
+            roadSpeed = speed * 0.1;
+            roadLines.forEach(line => {
+                line.position.z += roadSpeed * 0.16;
+                if (line.position.z > 10) {
+                    line.position.z -= 200;
+                }
+            });
+            
+            // 更新障礙物
+            obstacles.forEach((obstacle, index) => {
+                obstacle.position.z += roadSpeed * 0.16;
+                obstacle.rotation.y += 0.02;
+                
+                // 碰撞檢測
+                const dx = car.position.x - obstacle.position.x;
+                const dz = car.position.z - obstacle.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < 2) {
+                    gameOver();
+                }
+                
+                // 移除超出視野的障礙物並加分
+                if (obstacle.position.z > 10) {
+                    scene.remove(obstacle);
+                    obstacles.splice(index, 1);
+                    score += 10;
+                    updateUI();
+                }
+            });
+            
+            // 更新粒子
+            particles.forEach(particle => {
+                particle.position.z += roadSpeed * 0.08;
+                if (particle.position.z > 10) {
+                    particle.position.z -= 100;
+                }
+            });
+            
+            // 相機跟隨
+            camera.position.x = car.position.x * 0.3;
+            camera.lookAt(car.position.x * 0.5, 0, -20);
+            
+            // 持續加分
+            if (speed > 0) {
+                score += Math.floor(speed / 100);
+                updateUI();
+            }
+        }
+
+        // 更新 UI
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('speed').textContent = Math.floor(speed);
+        }
+
+        // 遊戲結束
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        // 重新開始
+        function restartGame() {
+            gameRunning = true;
+            score = 0;
+            speed = 0;
+            steering = 0;
+            
+            // 清除障礙物
+            obstacles.forEach(obstacle => scene.remove(obstacle));
+            obstacles = [];
+            
+            // 重置車子位置
+            car.position.x = 0;
+            car.rotation.z = 0;
+            
+            document.getElementById('gameOver').style.display = 'none';
+            updateUI();
+        }
+
+        // 動畫循環
+        function animate() {
+            requestAnimationFrame(animate);
+            update();
+            renderer.render(scene, camera);
+        }
+
+        // 啟動遊戲
+        init();
+    </script>
+</body>
+</html>
