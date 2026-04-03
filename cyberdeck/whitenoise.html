@@ -399,24 +399,67 @@
             }
             break;
 
-          case 'keyboard': // 打字聲 - 機械鍵盤的click + 空格鍵thud
-            for (let i = 0; i < bufferSize; i++) {
-              d[i] = 0;
-              // 普通按鍵 click（高頻短促）
-              if (Math.random() < 0.006) {
-                const clickLen = 15 + Math.random() * 25;
-                const clickFreq = 5000 + Math.random() * 4000;
-                for (let j = 0; j < Math.min(clickLen, bufferSize - i); j++) {
-                  d[i+j] += Math.sin(j/sr * clickFreq * Math.PI*2) * Math.exp(-j/5) * 0.35;
-                  d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/3) * 0.2;
+          case 'keyboard': // 打字聲 - 真實機械鍵盤模擬
+            { let lastClick = -2000; // 控制節奏間隔
+              for (let i = 0; i < bufferSize; i++) {
+                d[i] = 0;
+
+                // 打字節奏：模擬真人打字（有快有慢，偶爾停頓）
+                const timeSinceLast = i - lastClick;
+                const isTypingBurst = Math.sin(i/sr * 0.4 * Math.PI*2) > -0.3; // 打字/停頓交替
+
+                if (isTypingBurst && timeSinceLast > (sr * 0.06 + Math.random() * sr * 0.12)) {
+                  lastClick = i;
+                  const keyType = Math.random();
+
+                  if (keyType < 0.6) {
+                    // 普通字母鍵 — 清脆的 click（高頻短衝擊 + 回彈）
+                    const clickFreq = 2800 + Math.random() * 1500;
+                    const clickLen = Math.floor(sr * 0.008 + Math.random() * sr * 0.006);
+                    for (let j = 0; j < Math.min(clickLen, bufferSize - i); j++) {
+                      // 按下衝擊
+                      d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/(sr*0.001)) * 0.5;
+                      // 共振音色
+                      d[i+j] += Math.sin(j/sr * clickFreq * Math.PI*2) * Math.exp(-j/(sr*0.003)) * 0.2;
+                    }
+                    // 回彈聲（稍延遲的第二次輕擊）
+                    const bounceDelay = Math.floor(sr * 0.015 + Math.random() * sr * 0.01);
+                    for (let j = 0; j < Math.min(Math.floor(sr*0.004), bufferSize - i - bounceDelay); j++) {
+                      d[i+bounceDelay+j] += (Math.random() * 2 - 1) * Math.exp(-j/(sr*0.001)) * 0.15;
+                    }
+
+                  } else if (keyType < 0.85) {
+                    // 空格鍵 — 低沉寬厚的 thud + 彈簧共振
+                    const thudLen = Math.floor(sr * 0.04);
+                    for (let j = 0; j < Math.min(thudLen, bufferSize - i); j++) {
+                      d[i+j] += Math.sin(j/sr * 180 * Math.PI*2) * Math.exp(-j/(sr*0.012)) * 0.4;
+                      d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/(sr*0.005)) * 0.25;
+                      // 穩定器彈簧泛音
+                      d[i+j] += Math.sin(j/sr * 450 * Math.PI*2) * Math.exp(-j/(sr*0.008)) * 0.1;
+                    }
+
+                  } else if (keyType < 0.93) {
+                    // Enter / Backspace — 較重的按擊 + 金屬感
+                    const hitLen = Math.floor(sr * 0.02);
+                    const hitFreq = 1800 + Math.random() * 800;
+                    for (let j = 0; j < Math.min(hitLen, bufferSize - i); j++) {
+                      d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/(sr*0.002)) * 0.45;
+                      d[i+j] += Math.sin(j/sr * hitFreq * Math.PI*2) * Math.exp(-j/(sr*0.006)) * 0.2;
+                      d[i+j] += Math.sin(j/sr * (hitFreq*1.5) * Math.PI*2) * Math.exp(-j/(sr*0.004)) * 0.08;
+                    }
+
+                  } else {
+                    // Shift / Ctrl — 輕柔的觸底聲
+                    const softLen = Math.floor(sr * 0.012);
+                    for (let j = 0; j < Math.min(softLen, bufferSize - i); j++) {
+                      d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/(sr*0.002)) * 0.2;
+                      d[i+j] += Math.sin(j/sr * 3500 * Math.PI*2) * Math.exp(-j/(sr*0.002)) * 0.08;
+                    }
+                  }
                 }
-              }
-              // 空格鍵 thud（低頻鈍響）
-              if (Math.random() < 0.0008) {
-                for (let j = 0; j < Math.min(200, bufferSize - i); j++) {
-                  d[i+j] += Math.sin(j/sr * 300 * Math.PI*2) * Math.exp(-j/30) * 0.3;
-                  d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/15) * 0.15;
-                }
+
+                // 極微底噪（桌面環境聲）
+                d[i] += (Math.random() * 2 - 1) * 0.005;
               }
             }
             break;
@@ -509,7 +552,7 @@
         fire:   { type: 'lowpass',  freq: 2500 },
         birds:  { type: 'highpass', freq: 1500 },
         cafe:   { type: 'bandpass', freq: 800, Q: 0.3 },
-        keyboard:{ type: 'highpass', freq: 2000 },
+        keyboard:{ type: 'highpass', freq: 500 },
         train:  { type: 'lowpass',  freq: 1200 },
         creek:  { type: 'bandpass', freq: 2000, Q: 0.4 },
         night:  { type: 'highpass', freq: 1000 },
