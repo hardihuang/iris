@@ -182,6 +182,8 @@
         let scene, camera, renderer;
         let car, road, roadLines = [];
         let obstacles = [];
+        let npcCars = [];
+        let buildings = [];
         let particles = [];
         let score = 0;
         let speed = 0;
@@ -236,6 +238,9 @@
             // 創建粒子效果
             createParticles();
             
+            // 創建建築物
+            createBuildings();
+            
             // 事件監聽
             document.addEventListener('keydown', (e) => {
                 if (keys.hasOwnProperty(e.code)) keys[e.code] = true;
@@ -248,8 +253,9 @@
             // 開始遊戲循環
             animate();
             
-            // 開始生成障礙物
+            // 開始生成障礙物和 NPC 車輛
             setInterval(spawnObstacle, 2000);
+            setInterval(spawnNPCCar, 3000);
         }
 
         // 創建賽道
@@ -346,6 +352,157 @@
             
             car.position.y = 0;
             scene.add(car);
+        }
+
+        // 創建建築物
+        function createBuildings() {
+            const buildingColors = [0x4a4a6a, 0x3a3a5a, 0x5a5a7a, 0x2a2a4a];
+            
+            for (let i = 0; i < 30; i++) {
+                // 左側建築
+                const leftBuilding = createBuilding(
+                    buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                    -25 - Math.random() * 15,
+                    -i * 15
+                );
+                buildings.push(leftBuilding);
+                scene.add(leftBuilding);
+                
+                // 右側建築
+                const rightBuilding = createBuilding(
+                    buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                    25 + Math.random() * 15,
+                    -i * 15
+                );
+                buildings.push(rightBuilding);
+                scene.add(rightBuilding);
+            }
+        }
+
+        // 創建單個建築
+        function createBuilding(color, x, z) {
+            const width = 3 + Math.random() * 4;
+            const height = 5 + Math.random() * 15;
+            const depth = 3 + Math.random() * 4;
+            
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: color,
+                shininess: 20
+            });
+            const building = new THREE.Mesh(geometry, material);
+            building.position.set(x, height / 2, z);
+            
+            // 添加窗戶
+            const windowsGroup = new THREE.Group();
+            const windowGeometry = new THREE.PlaneGeometry(0.8, 0.8);
+            const windowMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffffaa,
+                transparent: true,
+                opacity: 0.6
+            });
+            
+            for (let wy = 2; wy < height - 1; wy += 2.5) {
+                for (let wx = -width/2 + 1; wx < width/2; wx += 1.5) {
+                    if (Math.random() > 0.3) {
+                        const window = new THREE.Mesh(windowGeometry, windowMaterial);
+                        window.position.set(wx, wy, depth/2 + 0.01);
+                        windowsGroup.add(window);
+                    }
+                }
+            }
+            building.add(windowsGroup);
+            
+            return building;
+        }
+
+        // 生成 NPC 車輛
+        function spawnNPCCar() {
+            if (!gameRunning) return;
+            
+            const npcCar = new THREE.Group();
+            
+            // 隨機顏色
+            const colors = [0x00ff88, 0xffaa00, 0x00aaff, 0xff66cc, 0x66ff66];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // 車身
+            const bodyGeometry = new THREE.BoxGeometry(1.8, 0.7, 3.5);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: color,
+                shininess: 80
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 0.5;
+            npcCar.add(body);
+            
+            // 車頂
+            const roofGeometry = new THREE.BoxGeometry(1.4, 0.5, 1.8);
+            const roofMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+            roof.position.y = 1.1;
+            roof.position.z = -0.2;
+            npcCar.add(roof);
+            
+            // 車燈
+            const lightGeometry = new THREE.BoxGeometry(0.3, 0.15, 0.1);
+            const frontLightMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffffaa,
+                emissive: 0xffffaa
+            });
+            const backLightMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff0044,
+                emissive: 0xff0044
+            });
+            
+            // 前燈
+            const leftFrontLight = new THREE.Mesh(lightGeometry, frontLightMaterial);
+            leftFrontLight.position.set(-0.5, 0.6, -1.75);
+            npcCar.add(leftFrontLight);
+            
+            const rightFrontLight = new THREE.Mesh(lightGeometry, frontLightMaterial);
+            rightFrontLight.position.set(0.5, 0.6, -1.75);
+            npcCar.add(rightFrontLight);
+            
+            // 尾燈
+            const leftBackLight = new THREE.Mesh(lightGeometry, backLightMaterial);
+            leftBackLight.position.set(-0.5, 0.6, 1.75);
+            npcCar.add(leftBackLight);
+            
+            const rightBackLight = new THREE.Mesh(lightGeometry, backLightMaterial);
+            rightBackLight.position.set(0.5, 0.6, 1.75);
+            npcCar.add(rightBackLight);
+            
+            // 車輪
+            const wheelGeometry = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
+            
+            const wheelPositions = [
+                [-0.9, 0.35, 1],
+                [0.9, 0.35, 1],
+                [-0.9, 0.35, -1],
+                [0.9, 0.35, -1]
+            ];
+            
+            wheelPositions.forEach(pos => {
+                const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+                wheel.rotation.z = Math.PI / 2;
+                wheel.position.set(...pos);
+                npcCar.add(wheel);
+            });
+            
+            // 設置位置（在玩家前方生成）
+            npcCar.position.x = (Math.random() - 0.5) * 14;
+            npcCar.position.z = -80 - Math.random() * 40;
+            
+            // 設置速度
+            npcCar.userData = { 
+                speed: 30 + Math.random() * 50,
+                lane: npcCar.position.x
+            };
+            
+            npcCars.push(npcCar);
+            scene.add(npcCar);
         }
 
         // 創建粒子效果
@@ -468,6 +625,44 @@
                 }
             });
             
+            // 更新 NPC 車輛
+            npcCars.forEach((npcCar, index) => {
+                // NPC 車輛以相對速度移動
+                const relativeSpeed = roadSpeed * 0.16 - (npcCar.userData.speed * 0.02);
+                npcCar.position.z += relativeSpeed;
+                
+                // 簡單的車道保持
+                const laneDiff = npcCar.userData.lane - npcCar.position.x;
+                npcCar.position.x += laneDiff * 0.02;
+                
+                // 碰撞檢測
+                const dx = car.position.x - npcCar.position.x;
+                const dz = car.position.z - npcCar.position.z;
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                
+                if (distance < 2.5) {
+                    gameOver();
+                }
+                
+                // 移除超出視野的 NPC 車輛
+                if (npcCar.position.z > 20 || npcCar.position.z < -150) {
+                    scene.remove(npcCar);
+                    npcCars.splice(index, 1);
+                }
+            });
+            
+            // 更新建築物
+            buildings.forEach(building => {
+                building.position.z += roadSpeed * 0.16;
+                if (building.position.z > 10) {
+                    building.position.z -= 450;
+                    // 隨機改變建築高度和顏色
+                    const newHeight = 5 + Math.random() * 15;
+                    building.scale.y = newHeight / building.geometry.parameters.height;
+                    building.position.y = newHeight / 2;
+                }
+            });
+            
             // 更新粒子
             particles.forEach(particle => {
                 particle.position.z += roadSpeed * 0.08;
@@ -507,9 +702,14 @@
             speed = 0;
             steering = 0;
             
-            // 清除障礙物
+            // 清除障礙物、NPC 車輛和建築物
             obstacles.forEach(obstacle => scene.remove(obstacle));
             obstacles = [];
+            npcCars.forEach(npcCar => scene.remove(npcCar));
+            npcCars = [];
+            buildings.forEach(building => scene.remove(building));
+            buildings = [];
+            createBuildings();
             
             // 重置車子位置
             car.position.x = 0;
