@@ -247,107 +247,251 @@
       masterGain.connect(audioCtx.destination);
     }
 
-    // ─── 合成白噪音引擎 ───
+    // ─── 合成白噪音引擎（每種音色獨立濾波器 + 獨特算法）───
     function createNoiseSource(type) {
       initAudio();
-      const bufferSize = audioCtx.sampleRate * 2;
-      const buffer = audioCtx.createBuffer(2, bufferSize, audioCtx.sampleRate);
+      const sr = audioCtx.sampleRate;
+      const bufferSize = sr * 4; // 4秒循環，更自然
+      const buffer = audioCtx.createBuffer(2, bufferSize, sr);
 
       for (let ch = 0; ch < 2; ch++) {
-        const data = buffer.getChannelData(ch);
+        const d = buffer.getChannelData(ch);
+        const offset = ch * 137; // 左右聲道略有差異，增加立體感
         switch(type) {
-          case 'white':
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+          case 'white': // 純白噪音 - 全頻段
+            for (let i = 0; i < bufferSize; i++) d[i] = (Math.random() * 2 - 1) * 0.7;
             break;
-          case 'rain':
+
+          case 'rain': // 雨聲 - 密集小滴 + 偶爾大滴，高頻為主
             for (let i = 0; i < bufferSize; i++) {
-              data[i] = (Math.random() * 2 - 1) * 0.3;
-              if (Math.random() < 0.001) data[i] += (Math.random() - 0.5) * 0.8;
-            }
-            break;
-          case 'thunder':
-            for (let i = 0; i < bufferSize; i++) {
-              data[i] = (Math.random() * 2 - 1) * 0.2;
-              if (Math.random() < 0.0003) {
-                for (let j = 0; j < Math.min(4000, bufferSize - i); j++) {
-                  data[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/1500) * 0.7;
+              d[i] = (Math.random() * 2 - 1) * 0.15; // 底噪
+              // 密集雨滴 (高頻 tick)
+              if (Math.random() < 0.008) {
+                const len = 30 + Math.random() * 60;
+                const freq = 4000 + Math.random() * 6000;
+                for (let j = 0; j < Math.min(len, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * freq * Math.PI*2) * Math.exp(-j/15) * 0.2;
+                }
+              }
+              // 偶爾大水滴 (低頻 plop)
+              if (Math.random() < 0.0008) {
+                const len = 200;
+                for (let j = 0; j < Math.min(len, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * (800 - j*2) * Math.PI*2) * Math.exp(-j/60) * 0.35;
                 }
               }
             }
             break;
-          case 'ocean':
+
+          case 'thunder': // 雷雨 - 雨底噪 + 低頻雷鳴 rumble
             for (let i = 0; i < bufferSize; i++) {
-              const wave = Math.sin(i / audioCtx.sampleRate * 0.15 * Math.PI * 2);
-              data[i] = (Math.random() * 2 - 1) * (0.2 + wave * 0.15);
+              d[i] = (Math.random() * 2 - 1) * 0.12;
+              if (Math.random() < 0.005) d[i] += (Math.random() - 0.5) * 0.15; // 雨滴
+              // 雷鳴：超低頻 rumble + 爆裂
+              if (Math.random() < 0.00015) {
+                const thunderLen = 8000 + Math.random() * 15000;
+                for (let j = 0; j < Math.min(thunderLen, bufferSize - i); j++) {
+                  const env = Math.exp(-j/5000) * (1 + Math.sin(j/sr * 0.5 * Math.PI*2) * 0.3);
+                  d[i+j] += (Math.random() * 2 - 1) * env * 0.6;
+                  d[i+j] += Math.sin(j/sr * (40 + Math.random()*30) * Math.PI*2) * env * 0.3;
+                }
+              }
             }
             break;
-          case 'wind':
-            let windVal = 0;
+
+          case 'ocean': // 海浪 - 慢速起伏 + 浪花泡沫
             for (let i = 0; i < bufferSize; i++) {
-              windVal += (Math.random() * 2 - 1) * 0.1;
-              windVal *= 0.998;
-              data[i] = windVal + (Math.random() * 2 - 1) * 0.05;
+              // 多層正弦調製，模擬浪潮節奏
+              const wave1 = Math.sin(i/sr * 0.08 * Math.PI*2); // ~8秒一個大浪
+              const wave2 = Math.sin(i/sr * 0.22 * Math.PI*2) * 0.4; // 小浪疊加
+              const envelope = Math.max(0, (wave1 + wave2) * 0.5 + 0.3);
+              d[i] = (Math.random() * 2 - 1) * envelope * 0.4;
+              // 浪花高頻泡沫
+              if (envelope > 0.5) {
+                d[i] += (Math.random() * 2 - 1) * (envelope - 0.4) * 0.3;
+              }
             }
             break;
-          case 'fire':
-            for (let i = 0; i < bufferSize; i++) {
-              data[i] = (Math.random() * 2 - 1) * 0.15;
-              if (Math.random() < 0.01) data[i] += (Math.random() - 0.5) * 0.5;
+
+          case 'wind': // 風聲 - 布朗噪音 + 慢速呼嘯
+            { let v = 0, slow = 0;
+              for (let i = 0; i < bufferSize; i++) {
+                slow += (Math.random() * 2 - 1) * 0.002;
+                slow *= 0.9998;
+                v += (Math.random() * 2 - 1) * 0.08;
+                v *= 0.995;
+                const howl = Math.sin(i/sr * (1.5 + slow * 3) * Math.PI*2) * 0.1;
+                d[i] = (v + howl + slow * 2) * 0.5;
+              }
             }
             break;
-          case 'birds':
+
+          case 'fire': // 篝火 - 低頻嗡鳴 + 隨機噼啪爆裂
             for (let i = 0; i < bufferSize; i++) {
-              data[i] = 0;
+              // 低頻火焰底噪
+              d[i] = (Math.random() * 2 - 1) * 0.08;
+              d[i] += Math.sin(i/sr * 60 * Math.PI*2) * (0.03 + Math.random() * 0.02);
+              // 噼啪聲 - 短促高頻爆裂
+              if (Math.random() < 0.003) {
+                const crackLen = 20 + Math.random() * 80;
+                const crackFreq = 1500 + Math.random() * 3000;
+                for (let j = 0; j < Math.min(crackLen, bufferSize - i); j++) {
+                  d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/10) * 0.5;
+                }
+              }
+              // 偶爾木頭斷裂 - 低頻 pop
               if (Math.random() < 0.0005) {
-                const freq = 2000 + Math.random() * 4000;
-                for (let j = 0; j < Math.min(800, bufferSize - i); j++) {
-                  data[i+j] += Math.sin(j / audioCtx.sampleRate * freq * Math.PI * 2) * Math.exp(-j/200) * 0.3;
+                for (let j = 0; j < Math.min(500, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * 200 * Math.PI*2) * Math.exp(-j/80) * 0.4;
                 }
               }
             }
             break;
-          case 'cafe':
+
+          case 'birds': // 鳥鳴 - 多種鳥叫：啁啾、顫音、短哨
             for (let i = 0; i < bufferSize; i++) {
-              data[i] = (Math.random() * 2 - 1) * 0.12;
-              if (Math.random() < 0.002) data[i] += (Math.random() - 0.5) * 0.3;
-            }
-            break;
-          case 'keyboard':
-            for (let i = 0; i < bufferSize; i++) {
-              data[i] = 0;
-              if (Math.random() < 0.002) {
-                for (let j = 0; j < Math.min(300, bufferSize - i); j++) {
-                  data[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/50) * 0.4;
+              d[i] = 0;
+              // 啁啾鳥 (上升音調)
+              if (Math.random() < 0.0003) {
+                const len = 400 + Math.random() * 600;
+                const baseFreq = 2500 + Math.random() * 2000;
+                for (let j = 0; j < Math.min(len, bufferSize - i); j++) {
+                  const freq = baseFreq + (j/len) * 1500;
+                  d[i+j] += Math.sin(j/sr * freq * Math.PI*2) * Math.exp(-j/(len*0.7)) * 0.25;
+                }
+              }
+              // 顫音鳥 (快速顫動)
+              if (Math.random() < 0.0002) {
+                const len = 800 + Math.random() * 1200;
+                const baseFreq = 3000 + Math.random() * 3000;
+                for (let j = 0; j < Math.min(len, bufferSize - i); j++) {
+                  const tremolo = Math.sin(j/sr * 30 * Math.PI*2) * 0.5 + 0.5;
+                  d[i+j] += Math.sin(j/sr * baseFreq * Math.PI*2) * tremolo * Math.exp(-j/(len*0.8)) * 0.2;
+                }
+              }
+              // 短哨鳥 (單音)
+              if (Math.random() < 0.0004) {
+                const len = 150 + Math.random() * 200;
+                const freq = 4000 + Math.random() * 4000;
+                for (let j = 0; j < Math.min(len, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * freq * Math.PI*2) * Math.exp(-j/(len*0.5)) * 0.2;
                 }
               }
             }
             break;
-          case 'train':
+
+          case 'cafe': // 咖啡廳 - 低頻人聲嗡嗡 + 杯碟碰撞 + 遠處音樂
             for (let i = 0; i < bufferSize; i++) {
-              const rhythm = Math.sin(i / audioCtx.sampleRate * 3 * Math.PI * 2);
-              data[i] = (Math.random() * 2 - 1) * (0.1 + Math.abs(rhythm) * 0.12);
-            }
-            break;
-          case 'creek':
-            for (let i = 0; i < bufferSize; i++) {
-              const flow = Math.sin(i / audioCtx.sampleRate * 0.8 * Math.PI * 2);
-              data[i] = (Math.random() * 2 - 1) * (0.1 + flow * 0.08);
-              if (Math.random() < 0.005) data[i] += (Math.random() - 0.5) * 0.4;
-            }
-            break;
-          case 'night':
-            for (let i = 0; i < bufferSize; i++) {
-              data[i] = (Math.random() * 2 - 1) * 0.03;
+              // 人聲嗡嗡（帶通噪音 200-600Hz 感覺）
+              d[i] = (Math.random() * 2 - 1) * 0.08;
+              // 模擬多人交談的調製
+              d[i] *= (0.7 + Math.sin(i/sr * 3.2 * Math.PI*2) * 0.15 + Math.sin(i/sr * 1.7 * Math.PI*2) * 0.15);
+              // 杯碟碰撞 - 高頻金屬聲
               if (Math.random() < 0.001) {
-                const freq = 3000 + Math.random() * 3000;
-                for (let j = 0; j < Math.min(1500, bufferSize - i); j++) {
-                  data[i+j] += Math.sin(j / audioCtx.sampleRate * freq * Math.PI * 2) * Math.exp(-j/500) * 0.15;
+                const freq = 3000 + Math.random() * 5000;
+                for (let j = 0; j < Math.min(400, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * freq * Math.PI*2) * Math.exp(-j/60) * 0.15;
+                }
+              }
+              // 遠處低頻音樂
+              d[i] += Math.sin(i/sr * 110 * Math.PI*2) * 0.01 * (Math.sin(i/sr * 0.5 * Math.PI*2) * 0.5 + 0.5);
+            }
+            break;
+
+          case 'keyboard': // 打字聲 - 機械鍵盤的click + 空格鍵thud
+            for (let i = 0; i < bufferSize; i++) {
+              d[i] = 0;
+              // 普通按鍵 click（高頻短促）
+              if (Math.random() < 0.006) {
+                const clickLen = 15 + Math.random() * 25;
+                const clickFreq = 5000 + Math.random() * 4000;
+                for (let j = 0; j < Math.min(clickLen, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * clickFreq * Math.PI*2) * Math.exp(-j/5) * 0.35;
+                  d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/3) * 0.2;
+                }
+              }
+              // 空格鍵 thud（低頻鈍響）
+              if (Math.random() < 0.0008) {
+                for (let j = 0; j < Math.min(200, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * 300 * Math.PI*2) * Math.exp(-j/30) * 0.3;
+                  d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/15) * 0.15;
                 }
               }
             }
             break;
+
+          case 'train': // 火車 - 有節奏的 clickety-clack + 低頻引擎嗡嗡
+            for (let i = 0; i < bufferSize; i++) {
+              // 引擎低頻嗡嗡
+              d[i] = Math.sin(i/sr * 45 * Math.PI*2) * 0.06;
+              d[i] += Math.sin(i/sr * 90 * Math.PI*2) * 0.03;
+              // 車輪節奏 clickety-clack (~2Hz 的雙擊)
+              const beatPhase = (i/sr * 1.8) % 1;
+              if (beatPhase < 0.02 || (beatPhase > 0.15 && beatPhase < 0.17)) {
+                d[i] += (Math.random() * 2 - 1) * 0.35;
+              }
+              // 鐵軌摩擦聲
+              d[i] += (Math.random() * 2 - 1) * 0.04;
+              // 車廂晃動
+              d[i] += Math.sin(i/sr * 0.7 * Math.PI*2) * (Math.random() * 2 - 1) * 0.03;
+            }
+            break;
+
+          case 'creek': // 溪流 - 流水聲 + 水花 + 石頭碰撞
+            for (let i = 0; i < bufferSize; i++) {
+              // 流水底噪（中高頻）
+              const flow1 = Math.sin(i/sr * 0.3 * Math.PI*2) * 0.3 + 0.7;
+              const flow2 = Math.sin(i/sr * 0.7 * Math.PI*2) * 0.2;
+              d[i] = (Math.random() * 2 - 1) * 0.12 * (flow1 + flow2);
+              // 水花聲（高頻噴濺）
+              if (Math.random() < 0.003) {
+                const splashLen = 100 + Math.random() * 200;
+                for (let j = 0; j < Math.min(splashLen, bufferSize - i); j++) {
+                  d[i+j] += (Math.random() * 2 - 1) * Math.exp(-j/40) * 0.25;
+                }
+              }
+              // 水滴落石（清脆 plop）
+              if (Math.random() < 0.001) {
+                for (let j = 0; j < Math.min(100, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * (1500 - j*5) * Math.PI*2) * Math.exp(-j/25) * 0.2;
+                }
+              }
+            }
+            break;
+
+          case 'night': // 夜晚蟲鳴 - 蟋蟀持續顫音 + 遠處蛙鳴 + 偶爾貓頭鷹
+            for (let i = 0; i < bufferSize; i++) {
+              d[i] = (Math.random() * 2 - 1) * 0.015; // 極微底噪
+              // 蟋蟀：持續高頻顫音 (~4500Hz 脈衝)
+              const cricketEnv = Math.sin(i/sr * 25 * Math.PI*2) > 0 ? 1 : 0;
+              d[i] += Math.sin(i/sr * 4500 * Math.PI*2) * cricketEnv * 0.06;
+              // 第二隻蟋蟀（稍不同頻率和節奏）
+              const cricket2 = Math.sin((i+offset*200)/sr * 22 * Math.PI*2) > 0.2 ? 1 : 0;
+              d[i] += Math.sin(i/sr * 5200 * Math.PI*2) * cricket2 * 0.04;
+              // 遠處蛙鳴（低頻短脈衝）
+              if (Math.random() < 0.0004) {
+                const len = 300 + Math.random() * 500;
+                const frogFreq = 400 + Math.random() * 300;
+                for (let j = 0; j < Math.min(len, bufferSize - i); j++) {
+                  d[i+j] += Math.sin(j/sr * frogFreq * Math.PI*2) * Math.exp(-j/(len*0.6)) * 0.15;
+                }
+              }
+              // 偶爾貓頭鷹 hoo-hoo
+              if (Math.random() < 0.00005) {
+                for (let k = 0; k < 2; k++) {
+                  const start = k * 4000;
+                  const hooFreq = 350;
+                  for (let j = 0; j < Math.min(3000, bufferSize - i - start); j++) {
+                    d[i+start+j] += Math.sin(j/sr * hooFreq * Math.PI*2) * Math.exp(-j/1200) * 0.12;
+                  }
+                }
+              }
+            }
+            break;
+
           default:
-            for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
+            for (let i = 0; i < bufferSize; i++) d[i] = (Math.random() * 2 - 1) * 0.5;
         }
       }
 
@@ -355,9 +499,27 @@
       source.buffer = buffer;
       source.loop = true;
 
+      // 每種音色用不同的濾波器設置
+      const filterSettings = {
+        white:  { type: 'lowpass',  freq: 12000 },
+        rain:   { type: 'highpass', freq: 800 },
+        thunder:{ type: 'lowpass',  freq: 600 },
+        ocean:  { type: 'lowpass',  freq: 1800 },
+        wind:   { type: 'bandpass', freq: 500, Q: 0.5 },
+        fire:   { type: 'lowpass',  freq: 2500 },
+        birds:  { type: 'highpass', freq: 1500 },
+        cafe:   { type: 'bandpass', freq: 800, Q: 0.3 },
+        keyboard:{ type: 'highpass', freq: 2000 },
+        train:  { type: 'lowpass',  freq: 1200 },
+        creek:  { type: 'bandpass', freq: 2000, Q: 0.4 },
+        night:  { type: 'highpass', freq: 1000 },
+      };
+
+      const fs = filterSettings[type] || { type: 'lowpass', freq: 5000 };
       const filter = audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = type === 'birds' || type === 'keyboard' ? 8000 : 3000;
+      filter.type = fs.type;
+      filter.frequency.value = fs.freq;
+      if (fs.Q) filter.Q.value = fs.Q;
 
       const gain = audioCtx.createGain();
       gain.gain.value = 0;
